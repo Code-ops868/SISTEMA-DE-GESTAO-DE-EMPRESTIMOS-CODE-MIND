@@ -141,11 +141,15 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # ← DEVE EXISTIR
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR / 'static')
+    os.path.join(BASE_DIR / 'static'),
 ]  # Aponta para a pasta static na raiz
 #STATIC_ROOT = BASE_DIR / 'staticfiles'     # Para produção
 
+# Arquivos de mídia (upload de usuários)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'mediafiles')
 # Configurações de autenticação
 LOGIN_URL = 'login'           # URL para redirecionar usuários não autenticados
 LOGIN_REDIRECT_URL = 'dashboard'  # URL após login bem-sucedido
