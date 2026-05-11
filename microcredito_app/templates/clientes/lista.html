@@ -1,0 +1,150 @@
+{% extends "core/dashboard_base.html" %}
+{% load static %}
+
+{% block title %}Clientes - CODEMIND{% endblock %}
+
+{% block page_css %}
+<link rel="stylesheet" href="{% static 'datatables/css/dataTables.bootstrap5.min.css' %}">
+<link rel="stylesheet" href="{% static 'css/clientes.css' %}">
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="clientes-container">
+    <div class="clientes-header">
+        <div>
+            <h1 class="clientes-title">Gestão de Clientes</h1>
+            <p class="clientes-subtitle">Cadastre, edite e gerencie todos os seus clientes</p>
+        </div>
+        <a href="{% url 'cliente_cadastrar' %}" class="btn-primary">
+            <i class="bi bi-person-plus-fill"></i>
+            <span>Novo Cliente</span>
+        </a>
+    </div>
+    
+    <div class="clientes-table-card">
+        <div class="table-responsive">
+            <table class="data-table" id="clientes-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nome</th>
+                        <th>E-mail</th>
+                        <th>Telefone</th>
+                        <th>Renda Mensal</th>
+                        <th>Empréstimos</th>
+                        <th>Data Cadastro</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cliente in clientes %}
+                    <tr>
+                        <td>{{ cliente.id }}</td>
+                        <td><strong>{{ cliente.nome }}</strong></strong></td>
+                        <td>{{ cliente.email|default:"—" }}</td>
+                        <td>{{ cliente.telefone }}</td>
+                        <td>{% if cliente.renda_mensal %}MT {{ cliente.renda_mensal|floatformat:2 }}{% else %}—{% endif %}</td>
+                        <td><span class="badge bg-info">{{ cliente.emprestimos.count }}</span></td>
+                        <td>{{ cliente.data_cadastro|date:"d/m/Y" }}</td>
+                        <td class="actions">
+                            <a href="{% url 'cliente_editar' cliente.id %}" class="btn-icon" title="Editar">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <form method="POST" action="{% url 'cliente_excluir' cliente.id %}" class="delete-form d-inline" onsubmit="return confirmarExclusao('{{ cliente.nome|escapejs }}')">
+                                {% csrf_token %}
+                                <button type="submit" class="btn-icon delete" title="Excluir">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr class="empty-row">
+                        <td colspan="8" class="empty-state text-center py-5">
+                            <div>
+                                <i class="bi bi-people fs-1"></i>
+                                <p>Nenhum cliente cadastrado ainda</p>
+                                <a href="{% url 'cliente_cadastrar' %}" class="btn btn-primary">Cadastrar primeiro cliente</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="{% static 'javascript/jquery-3.7.0.min.js' %}"></script>
+<script src="{% static 'datatables/js/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'datatables/js/dataTables.bootstrap5.min.js' %}"></script>
+
+<script>
+// Função para destruir instância existente do DataTables
+function destruirDataTable() {
+    if (jQuery.fn.DataTable.isDataTable('#clientes-table')) {
+        jQuery('#clientes-table').DataTable().destroy();
+    }
+}
+
+// Função para inicializar o DataTables
+function inicializarDataTable() {
+    const tabela = jQuery('#clientes-table');
+    const tbody = tabela.find('tbody');
+    const temDados = tbody.find('tr').length > 0 && 
+                     tbody.find('.empty-row').length === 0;
+    
+    if (temDados) {
+        destruirDataTable();
+        
+        tabela.DataTable({
+            language: {
+                "sEmptyTable": "Nenhum cliente encontrado",
+                "sInfo": "Mostrando _START_ até _END_ de _TOTAL_ clientes",
+                "sInfoEmpty": "Mostrando 0 até 0 de 0 clientes",
+                "sInfoFiltered": "(filtrado de _MAX_ clientes no total)",
+                "sLengthMenu": "Mostrar _MENU_ clientes por página",
+                "sLoadingRecords": "Carregando...",
+                "sProcessing": "Processando...",
+                "sSearch": "Pesquisar:",
+                "sZeroRecords": "Nenhum cliente encontrado",
+                "oPaginate": {
+                    "sFirst": "Primeiro",
+                    "sLast": "Último",
+                    "sNext": "Seguinte",
+                    "sPrevious": "Anterior"
+                }
+            },
+            pageLength: 10,
+            responsive: true,
+            order: [[0, 'desc']],
+            columnDefs: [
+                { orderable: false, targets: 7 } // Desabilitar ordenação na coluna Ações
+            ]
+        });
+        console.log('✅ DataTables inicializado');
+    } else {
+        console.log('ℹ️ Tabela vazia, DataTables não inicializado');
+    }
+}
+
+// Função para confirmar exclusão
+function confirmarExclusao(nome) {
+    return confirm(`Tem certeza que deseja excluir o cliente "${nome}"?`);
+}
+
+// Aguardar o DOM carregar
+document.addEventListener('DOMContentLoaded', function() {
+    if (typeof jQuery !== 'undefined' && jQuery.fn && jQuery.fn.DataTable) {
+        inicializarDataTable();
+    }
+});
+
+// Recarregar DataTables quando a página for restaurada (após exclusão)
+window.addEventListener('pageshow', function() {
+    if (typeof jQuery !== 'undefined' && jQuery.fn && jQuery.fn.DataTable) {
+        inicializarDataTable();
+    }
+});
+</script>
+{% endblock %}

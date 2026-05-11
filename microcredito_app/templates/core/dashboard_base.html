@@ -1,0 +1,140 @@
+{% extends "modelo.html" %}
+{% load static %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+{% block page_css %}{% endblock %}
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+    <!-- Menu Lateral -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="user-avatar" id="userAvatar">
+                {% if user.empresa and user.empresa.logo %}
+                    <img src="{{ user.empresa.logo.url }}" alt="{{ user.empresa.nome }}" class="avatar-img">
+                {% else %}
+                    <i class="bi bi-person-circle"></i>
+                {% endif %}
+            </div>
+            <div class="user-info">
+                <h4 id="userName">
+                    {% if user.empresa %}
+                        {{ user.empresa.nome }}
+                    {% else %}
+                        {{ user.get_full_name|default:user.username }}
+                    {% endif %}
+                </h4>
+                <span id="userEmail">{{ user.email }}</span>
+                
+                {% if user.empresa %}
+                <div class="user-status mt-2">
+                    <span class="badge {% if user.empresa.status == 'ativa' %}badge-success{% else %}badge-secondary{% endif %}">
+                        {{ user.empresa.get_status_display }}
+                    </span>
+                </div>
+                {% if user.empresa.telefone %}
+                <div class="user-phone mt-2">
+                    <i class="bi bi-whatsapp"></i>
+                    <span>{{ user.empresa.telefone }}</span>
+                </div>
+                {% endif %}
+                {% if user.empresa.endereco %}
+                <div class="user-address mt-1">
+                    <i class="bi bi-geo-alt"></i>
+                    <span class="small">{{ user.empresa.endereco|truncatechars:35 }}</span>
+                </div>
+                {% endif %}
+                {% endif %}
+            </div>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <div class="nav-title">Menu Principal</div>
+                
+                <a href="{% url 'dashboard' %}" class="nav-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                    <i class="bi bi-speedometer2"></i>
+                    <span>Dashboard</span>
+                </a>
+                
+                <a href="{% url 'clientes' %}" class="nav-item {% if request.resolver_match.url_name == 'clientes' %}active{% endif %}">
+                    <i class="bi bi-people"></i>
+                    <span>Clientes</span>
+                </a>
+                
+                <a href="{% url 'cliente_cadastrar' %}" class="nav-item">
+                    <i class="bi bi-person-plus"></i>
+                    <span>Novo Cliente</span>
+                </a>
+                
+                <a href="{% url 'emprestimo' %}" class="nav-item {% if request.resolver_match.url_name == 'emprestimos' %}active{% endif %}">
+                    <i class="bi bi-calculator"></i>
+                    <span>Empréstimos</span>
+                </a>
+                
+                <a href="{% url 'emprestimo_cadastrar' %}" class="nav-item">
+                    <i class="bi bi-plus-circle"></i>
+                    <span>Novo Empréstimo</span>
+                </a>
+                
+                <a href="{% url 'pagamentos' %}" class="nav-item {% if request.resolver_match.url_name == 'pagamentos' %}active{% endif %}">
+                    <i class="bi bi-cash-stack"></i>
+                    <span>Pagamentos</span>
+                </a>
+            </div>
+            
+            <div class="menu-divider"></div>
+            
+            <div class="nav-section">
+                <div class="nav-title">Relatórios</div>
+                
+                <a href="{% url 'relatorios' %}" class="nav-item">
+                    <i class="bi bi-graph-up"></i>
+                    <span>Relatórios Gerais</span>
+                </a>
+            </div>
+            
+            <!-- ============================================ -->
+            <!-- ADMINISTRAÇÃO (Apenas para admin da empresa) -->
+            <!-- ============================================ -->
+            {% if user.is_authenticated and user.funcionario.cargo == 'admin_empresa' %}
+            <div class="menu-divider"></div>
+            <div class="nav-section">
+                <div class="nav-title">Administração</div>
+                
+                <a href="{% url 'gerenciar_funcionarios' %}" class="nav-item">
+                    <i class="bi bi-people"></i>
+                    <span>Funcionários</span>
+                </a>
+            </div>
+            {% endif %}
+            
+        </nav>
+    </aside>
+    
+    <!-- Conteúdo Principal -->
+    <main class="main-content" id="mainContent">
+        <button class="menu-toggle" id="menuToggle">
+            <i class="bi bi-list"></i>
+        </button>
+        
+        {% block dashboard_content %}{% endblock %}
+    </main>
+</div>
+
+<script src="{% static 'javascript/dashboard.js' %}"></script>
+<script>
+    const menuToggle = document.getElementById('menuToggle');
+    const sidebar = document.getElementById('sidebar');
+    
+    if (menuToggle) {
+        menuToggle.addEventListener('click', function() {
+            sidebar.classList.toggle('open');
+        });
+    }
+</script>
+
+{% block page_js %}{% endblock %}
+{% endblock %}

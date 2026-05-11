@@ -1,0 +1,101 @@
+{% extends "modelo.html" %}
+{% load static %}
+
+{% block title %}Planos - CODE-MIND{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/planos.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="planos-container">
+    <div class="planos-header">
+        <h1>Escolha o Plano Ideal para Você</h1>
+        <p>Período de teste gratuito de 7 dias. Após o teste, escolha um dos planos abaixo.</p>
+    </div>
+    
+    <div class="planos-grid">
+        {% for plano in planos %}
+        <div class="plano-card {% if forloop.counter == 2 %}destaque{% endif %}">
+            {% if forloop.counter == 2 %}
+            <div class="plano-badge">Mais Econômico</div>
+            {% endif %}
+            <div class="plano-header">
+                <i class="bi bi-calendar-{% if plano.nome == 'mensal' %}month{% elif plano.nome == 'trimestral' %}week{% else %}3{% endif %}"></i>
+                <h2>{{ plano.get_nome_display }}</h2>
+                <div class="plano-preco">
+                    <span class="preco">{{ plano.valor|floatformat:0 }} MT</span>
+                    <span class="periodo">
+                        {% if plano.nome == 'mensal' %}/mês
+                        {% elif plano.nome == 'trimestral' %}/trimestre
+                        {% else %}/ano{% endif %}
+                    </span>
+                </div>
+                {% if plano.nome == 'trimestral' %}
+                <div class="plano-economia">Economia de 25%</div>
+                {% elif plano.nome == 'anual' %}
+                <div class="plano-economia">Economia de 33%</div>
+                {% endif %}
+            </div>
+            <div class="plano-body">
+                <ul class="plano-beneficios">
+                    <li><i class="bi bi-check-circle"></i> Acesso completo ao sistema</li>
+                    <li><i class="bi bi-check-circle"></i> Gestão de clientes ilimitada</li>
+                    <li><i class="bi bi-check-circle"></i> Empréstimos ilimitados</li>
+                    <li><i class="bi bi-check-circle"></i> Relatórios completos</li>
+                    <li><i class="bi bi-check-circle"></i> Suporte por WhatsApp</li>
+                </ul>
+                {% if user.is_authenticated %}
+                    <button class="btn-primary" onclick="escolherPlano('{{ plano.nome }}', '{{ plano.valor }}')">
+                        Escolher Plano
+                    </button>
+                {% else %}
+                    <a href="{% url 'login' %}?next={{ request.path }}" class="btn-primary" style="text-align: center; display: block; text-decoration: none;">
+                        Faça login para assinar
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    {% if user.is_authenticated and assinatura %}
+    <div class="info-assinatura">
+        <h3>Sua Assinatura Atual</h3>
+        <div class="info-card">
+            <div class="info-item">
+                <span>Status:</span>
+                <strong class="{% if assinatura.status == 'teste' %}text-warning{% elif assinatura.status == 'ativa' %}text-success{% else %}text-danger{% endif %}">
+                    {% if assinatura.status == 'teste' %}Período de Teste
+                    {% elif assinatura.status == 'ativa' %}Ativa
+                    {% else %}Expirada{% endif %}
+                </strong>
+            </div>
+            <div class="info-item">
+                <span>Expira em:</span>
+                <strong>{{ assinatura.data_expiracao|date:"d/m/Y H:i" }}</strong>
+            </div>
+            {% if assinatura.status == 'teste' %}
+            <div class="info-item">
+                <span>Dias restantes:</span>
+                <strong>{{ dias_restantes }} dias</strong>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+    
+    {% if not user.is_authenticated %}
+    <div class="info-assinatura">
+        <div class="info-card">
+            <div class="info-item">
+                <i class="bi bi-info-circle"></i>
+                <span>Para assinar um plano, <a href="{% url 'login' %}?next={{ request.path }}" class="text-success">faça login</a> ou <a href="{% url 'cadastro' %}" class="text-success">crie uma conta</a> gratuitamente.</span>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script src="{% static 'javascript/planos.js' %}"></script>
+{% endblock %}

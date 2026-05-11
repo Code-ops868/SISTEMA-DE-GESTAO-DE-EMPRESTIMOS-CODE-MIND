@@ -1,0 +1,11 @@
+/* CSS mínimo para o modal - sem conflitos */
+.modal .form-control:focus,
+.modal .form-select:focus {
+    border-color: #88ff66 !important;
+    box-shadow: 0 0 0 0.2rem rgba(136, 255, 102, 0.25) !important;
+}
+
+.modal .form-control[readonly] {
+    background-color: #1a1e24 !important;
+    cursor: default;
+}

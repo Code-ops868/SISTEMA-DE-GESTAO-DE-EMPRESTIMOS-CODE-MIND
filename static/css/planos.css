@@ -1,0 +1,332 @@
+/* ============================================ */
+/* PLANOS - ESTILOS ESPECÍFICOS */
+/* REGRA 3: AZUL ESCURO + VERDE */
+/* ============================================ */
+
+.planos-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+}
+
+.planos-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.planos-header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #e6edf3;
+    margin-bottom: 1rem;
+}
+
+.planos-header p {
+    color: rgba(230, 237, 243, 0.7);
+    font-size: 1.1rem;
+}
+
+.planos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 2rem;
+    margin-bottom: 3rem;
+}
+
+.plano-card {
+    background: linear-gradient(135deg, rgba(13, 17, 23, 0.9), rgba(10, 12, 16, 0.95));
+    border: 1px solid rgba(56, 139, 253, 0.2);
+    border-radius: 20px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.plano-card:hover {
+    transform: translateY(-5px);
+    border-color: #88ff66;
+}
+
+.plano-card.destaque {
+    border: 2px solid #88ff66;
+    transform: scale(1.02);
+}
+
+.plano-card.destaque:hover {
+    transform: scale(1.02) translateY(-5px);
+}
+
+.plano-badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: linear-gradient(135deg, #88ff66, #5fd43e);
+    color: #0a0c10;
+    padding: 0.5rem 1rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: 0 0 0 12px;
+}
+
+.plano-header {
+    text-align: center;
+    padding: 2rem;
+    border-bottom: 1px solid rgba(56, 139, 253, 0.2);
+}
+
+.plano-header i {
+    font-size: 3rem;
+    color: #88ff66;
+    margin-bottom: 1rem;
+}
+
+.plano-header h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #e6edf3;
+    margin-bottom: 1rem;
+}
+
+.plano-preco {
+    margin-top: 1rem;
+}
+
+.preco {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #88ff66;
+}
+
+.periodo {
+    font-size: 0.9rem;
+    color: rgba(230, 237, 243, 0.6);
+}
+
+.plano-economia {
+    margin-top: 0.5rem;
+    font-size: 0.8rem;
+    color: #ffa657;
+}
+
+.plano-body {
+    padding: 2rem;
+}
+
+.plano-beneficios {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1.5rem 0;
+}
+
+.plano-beneficios li {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0;
+    color: rgba(230, 237, 243, 0.8);
+    font-size: 0.9rem;
+}
+
+.plano-beneficios li i {
+    color: #88ff66;
+    font-size: 1rem;
+}
+
+.btn-primary {
+    width: 100%;
+    background: linear-gradient(135deg, #88ff66, #5fd43e);
+    border: none;
+    padding: 0.75rem;
+    border-radius: 10px;
+    color: #0a0c10;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(136, 255, 102, 0.3);
+}
+
+.info-assinatura {
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid rgba(56, 139, 253, 0.2);
+}
+
+.info-assinatura h3 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #e6edf3;
+    margin-bottom: 1rem;
+}
+
+.info-card {
+    background: rgba(13, 17, 23, 0.8);
+    border: 1px solid rgba(56, 139, 253, 0.2);
+    border-radius: 12px;
+    padding: 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+}
+
+.info-item {
+    display: flex;
+    gap: 0.5rem;
+    align-items: baseline;
+}
+
+.info-item span {
+    color: rgba(230, 237, 243, 0.6);
+    font-size: 0.9rem;
+}
+
+.info-item strong {
+    color: #e6edf3;
+    font-size: 1rem;
+}
+
+.text-success { color: #88ff66 !important; }
+.text-warning { color: #ffa657 !important; }
+.text-danger { color: #f85149 !important; }
+
+.pagamento-container {
+    max-width: 500px;
+    margin: 2rem auto;
+    padding: 1rem;
+}
+
+.pagamento-card {
+    background: linear-gradient(135deg, rgba(13, 17, 23, 0.9), rgba(10, 12, 16, 0.95));
+    border: 1px solid rgba(56, 139, 253, 0.2);
+    border-radius: 20px;
+    padding: 2rem;
+}
+
+.pagamento-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.pagamento-header i {
+    font-size: 3rem;
+    color: #88ff66;
+}
+
+.pagamento-header h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #e6edf3;
+    margin-top: 1rem;
+}
+
+.plano-info {
+    background: rgba(136, 255, 102, 0.1);
+    border: 1px solid #88ff66;
+    border-radius: 12px;
+    padding: 1rem;
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.plano-info h3 {
+    color: #88ff66;
+    margin-bottom: 0.5rem;
+}
+
+.plano-valor .valor {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #88ff66;
+}
+
+.form-group {
+    margin-bottom: 1.25rem;
+}
+
+.form-group label {
+    display: block;
+    color: #e6edf3;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.75rem;
+    background: rgba(13, 17, 23, 0.8);
+    border: 1px solid rgba(56, 139, 253, 0.3);
+    border-radius: 10px;
+    color: #e6edf3;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #88ff66;
+}
+
+.form-hint {
+    display: block;
+    font-size: 0.75rem;
+    color: rgba(230, 237, 243, 0.5);
+    margin-top: 0.25rem;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.btn-secondary {
+    flex: 1;
+    background: transparent;
+    border: 1px solid #88ff66;
+    padding: 0.75rem;
+    border-radius: 10px;
+    color: #88ff66;
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.pagamento-info {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(56, 139, 253, 0.2);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    color: rgba(230, 237, 243, 0.6);
+}
+
+.pagamento-info i {
+    color: #88ff66;
+}
+
+@media (max-width: 768px) {
+    .planos-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .plano-card.destaque {
+        transform: scale(1);
+    }
+    
+    .plano-card.destaque:hover {
+        transform: translateY(-5px);
+    }
+    
+    .info-card {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+}

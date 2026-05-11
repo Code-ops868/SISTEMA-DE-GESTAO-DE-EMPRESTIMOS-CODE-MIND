@@ -1,0 +1,248 @@
+{% extends "modelo.html" %}
+{% load static %}
+
+{% block title %}Pagamentos - CODE-MIND{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/pagamentos.css' %}">
+<link rel="stylesheet" href="{% static 'datatables/css/dataTables.bootstrap5.min.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="pagamentos-container">
+    <!-- Cards de Resumo -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon"><i class="bi bi-check-circle"></i></div>
+            <div class="stat-info">
+                <p class="stat-label">Recebido no Mês</p>
+                <h2 class="stat-value">MT {{ recebido_mes|floatformat:2 }}</h2>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon"><i class="bi bi-clock-history"></i></div>
+            <div class="stat-info">
+                <p class="stat-label">A Receber</p>
+                <h2 class="stat-value">MT {{ a_receber|floatformat:2 }}</h2>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon"><i class="bi bi-exclamation-triangle"></i></div>
+            <div class="stat-info">
+                <p class="stat-label">Em Atraso</p>
+                <h2 class="stat-value">MT {{ em_atraso|floatformat:2 }}</h2>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Abas -->
+    <ul class="nav nav-tabs mb-4" id="pagamentoTabs">
+        <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#pendentes"><i class="bi bi-clock"></i> Pendentes {% if parcelas_pendentes|length > 0 %}<span class="badge bg-warning ms-2">{{ parcelas_pendentes|length }}</span>{% endif %}</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#atrasadas"><i class="bi bi-exclamation-triangle"></i> Atrasadas {% if parcelas_atrasadas|length > 0 %}<span class="badge bg-danger ms-2">{{ parcelas_atrasadas|length }}</span>{% endif %}</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#historico"><i class="bi bi-calendar-check"></i> Histórico</button></li>
+    </ul>
+    
+    <div class="tab-content">
+        <!-- Parcelas Pendentes -->
+        <div class="tab-pane fade show active" id="pendentes">
+            <div class="table-card">
+                <div class="table-header"><h3>Próximas Parcelas</h3></div>
+                <div class="table-responsive">
+                    <table class="data-table" id="tabela-pendentes">
+                        <thead>
+                            <tr>
+                                <th>Cliente</th>
+                                <th>Empréstimo</th>
+                                <th>Parcela</th>
+                                <th>Valor</th>
+                                <th>Vencimento</th>
+                                <th>Dias</th>
+                                <th>Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in parcelas_pendentes %}
+                            <tr>
+                                <td><strong>{{ p.cliente_nome }}</strong><br><small>{{ p.cliente_telefone }}</small></td>
+                                <td>#{{ p.emprestimo_id }}</td>
+                                <td>{{ p.numero }}/{{ p.total_parcelas }}</td>
+                                <td class="text-success fw-bold">MT {{ p.valor|floatformat:2 }}</td>
+                                <td>{{ p.data_vencimento|date:"d/m/Y" }}</td>
+                                <td class="text-center">
+                                    {% if p.dias_restantes <= 3 %}
+                                        <span class="badge bg-danger">{{ p.dias_restantes }} dias</span>
+                                    {% elif p.dias_restantes <= 7 %}
+                                        <span class="badge bg-warning">{{ p.dias_restantes }} dias</span>
+                                    {% else %}
+                                        <span class="badge bg-success">{{ p.dias_restantes }} dias</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    <a href="{% url 'pagar_parcela' p.id %}" class="btn btn-sm btn-success">
+                                        <i class="bi bi-cash"></i> Pagar
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="empty-state">Nenhuma parcela pendente</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Parcelas Atrasadas -->
+        <div class="tab-pane fade" id="atrasadas">
+            <div class="table-card">
+                <div class="table-header"><h3>Parcelas em Atraso</h3></div>
+                <div class="table-responsive">
+                    <table class="data-table" id="tabela-atrasadas">
+                        <thead>
+                            <tr>
+                                <th>Cliente</th>
+                                <th>Parcela</th>
+                                <th>Valor Original</th>
+                                <th>Multa</th>
+                                <th>Juros</th>
+                                <th>Total</th>
+                                <th>Dias</th>
+                                <th>Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in parcelas_atrasadas %}
+                            <tr class="table-danger-row">
+                                <td><strong>{{ p.cliente_nome }}</strong><br><small>{{ p.cliente_telefone }}</small></td>
+                                <td>{{ p.numero }}/{{ p.total_parcelas }}</td>
+                                <td class="text-danger">MT {{ p.valor_original|floatformat:2 }}</td>
+                                <td class="text-danger">+ MT {{ p.multa|floatformat:2 }}</td>
+                                <td class="text-danger">+ MT {{ p.juros|floatformat:2 }}</td>
+                                <td class="text-warning fw-bold">MT {{ p.valor_total|floatformat:2 }}</td>
+                                <td class="text-center"><span class="badge bg-danger">{{ p.dias_atraso }} dias</span></td>
+                                <td class="text-center">
+                                    <a href="{% url 'regularizar_parcela' p.id %}" class="btn btn-sm btn-warning">
+                                        <i class="bi bi-cash"></i> Regularizar
+                                    </a>
+                                    <button class="btn btn-sm btn-outline-info" onclick="simularJuros({{ p.id }})">
+                                        <i class="bi bi-calculator"></i> Simular
+                                    </button>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="8" class="empty-state">Nenhuma parcela em atraso</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Histórico -->
+        <div class="tab-pane fade" id="historico">
+            <div class="table-card">
+                <div class="table-header"><h3>Histórico de Pagamentos</h3></div>
+                <div class="table-responsive">
+                    <table class="data-table" id="tabela-historico">
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Cliente</th>
+                                <th>Parcela</th>
+                                <th>Valor</th>
+                                <th>Forma</th>
+                                <th>Comprovante</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for pag in historico_pagamentos %}
+                            <tr>
+                                <td class="text-center">{{ pag.data|date:"d/m/Y H:i" }}</td>
+                                <td><strong>{{ pag.cliente_nome }}</strong></td>
+                                <td class="text-center">{{ pag.parcela_numero }}/{{ pag.total_parcelas }}</td>
+                                <td class="text-success">MT {{ pag.valor|floatformat:2 }}</td>
+                                <td class="text-center">{{ pag.get_forma_pagamento_display }}</td>
+                                <td class="text-center">
+                                    {% if pag.comprovante %}
+                                        <button class="btn btn-sm btn-outline-success" onclick="verComprovante('{{ pag.comprovante }}')">
+                                            <i class="bi bi-file-pdf"></i>
+                                        </button>
+                                    {% else %}
+                                        <span class="text-light-50">—</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="empty-state">Nenhum pagamento registrado</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+<!-- ============================================ -->
+<!-- SCRIPTS -->
+<!-- ============================================ -->
+<script src="{% static 'javascript/jquery-3.7.0.min.js' %}"></script>
+<script src="{% static 'bootstrap/js/bootstrap.bundle.js' %}"></script>
+<script src="{% static 'datatables/js/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'datatables/js/dataTables.bootstrap5.min.js' %}"></script>
+
+<script>
+// ============================================
+// FUNÇÃO SIMULAR JUROS
+// ============================================
+window.simularJuros = function(id) {
+    fetch(`/simular-juros/${id}/`)
+        .then(response => response.json())
+        .then(data => {
+            alert('📊 SIMULAÇÃO DE JUROS\n\n' +
+                'Valor Original: MT ' + data.valor_original.toFixed(2).replace('.', ',') + '\n' +
+                'Dias em Atraso: ' + data.dias_atraso + '\n' +
+                'Multa (2%): MT ' + data.multa.toFixed(2).replace('.', ',') + '\n' +
+                'Juros: MT ' + data.juros_mora.toFixed(2).replace('.', ',') + '\n' +
+                '━━━━━━━━━━━━━━━━━━━━━━\n' +
+                'Total a Pagar: MT ' + data.valor_total.toFixed(2).replace('.', ','));
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            alert('❌ Erro ao simular juros.');
+        });
+};
+
+// ============================================
+// FUNÇÃO VER COMPROVANTE
+// ============================================
+window.verComprovante = function(url) {
+    if (url) {
+        window.open(url, '_blank');
+    }
+};
+
+// ============================================
+// DATATABLES
+// ============================================
+document.addEventListener('DOMContentLoaded', function() {
+    if (typeof $ !== 'undefined' && $.fn.DataTable) {
+        if ($('#tabela-pendentes').length) {
+            $('#tabela-pendentes').DataTable({ pageLength: 10, order: [[4, 'asc']] });
+        }
+        if ($('#tabela-atrasadas').length) {
+            $('#tabela-atrasadas').DataTable({ pageLength: 10 });
+        }
+        if ($('#tabela-historico').length) {
+            $('#tabela-historico').DataTable({ pageLength: 10, order: [[0, 'desc']] });
+        }
+    }
+});
+</script>

@@ -1,0 +1,65 @@
+{% extends "modelo.html" %}
+{% load static %}
+
+{% block title %}Pagamento - CODE-MIND{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/planos.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="pagamento-container">
+    <div class="pagamento-card">
+        <div class="pagamento-header">
+            <i class="bi bi-credit-card"></i>
+            <h2>Pagamento do Plano</h2>
+            <p>Complete o pagamento para ativar sua assinatura</p>
+        </div>
+        
+        <div class="plano-info">
+            <h3>{{ plano.get_nome_display }}</h3>
+            <div class="plano-valor">
+                <span class="valor">{{ plano.valor|floatformat:0 }} MT</span>
+                <span class="periodo">
+                    {% if plano.nome == 'mensal' %}por mês
+                    {% elif plano.nome == 'trimestral' %}por trimestre
+                    {% else %}por ano{% endif %}
+                </span>
+            </div>
+        </div>
+        
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="forma_pagamento">Forma de Pagamento</label>
+                <select name="forma_pagamento" id="forma_pagamento" class="form-control" required>
+                    <option value="">Selecione</option>
+                    <option value="dinheiro">💵 Dinheiro</option>
+                    <option value="pix">📱 PIX</option>
+                    <option value="transferencia">🏦 Transferência</option>
+                    <option value="cartao">💳 Cartão</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="comprovante">Comprovante</label>
+                <input type="file" name="comprovante" id="comprovante" class="form-control" accept="image/*,.pdf">
+                <small class="form-hint">Envie o comprovante (JPG, PNG, PDF)</small>
+            </div>
+            
+            <div class="form-actions">
+                <a href="{% url 'planos' %}" class="btn-secondary">Cancelar</a>
+                <button type="submit" class="btn-primary">Confirmar Pagamento</button>
+            </div>
+        </form>
+        
+        <div class="pagamento-info">
+            <i class="bi bi-info-circle"></i>
+            <span>Ativação em até 24h úteis.</span>
+        </div>
+    </div>
+</div>
+
+<script src="{% static 'javascript/planos.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,110 @@
+/* ============================================ */
+/* BANNER DE PLANOS - DEMO */
+/* ============================================ */
+
+.planos-demo-container {
+    margin: 2rem auto;
+    max-width: 600px;
+    animation: fadeInUp 0.5s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.planos-banner {
+    background: linear-gradient(135deg, rgba(136, 255, 102, 0.2), rgba(56, 139, 253, 0.2));
+    border: 2px solid #88ff66;
+    border-radius: 60px;
+    padding: 0.75rem 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.planos-banner:hover {
+    transform: scale(1.02);
+    box-shadow: 0 5px 20px rgba(136, 255, 102, 0.3);
+}
+
+.planos-banner-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.planos-banner-content i {
+    font-size: 1.5rem;
+    color: #ffc107;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.1); opacity: 0.8; }
+}
+
+.planos-banner-text {
+    flex: 1;
+    text-align: left;
+}
+
+.planos-banner-text strong {
+    display: block;
+    font-size: 0.9rem;
+    color: #88ff66;
+}
+
+.planos-banner-text span {
+    display: block;
+    font-size: 0.7rem;
+    color: rgba(230, 237, 243, 0.7);
+}
+
+.planos-banner-btn {
+    background: linear-gradient(135deg, #88ff66, #5fd43e);
+    color: #0a0c10;
+    padding: 0.5rem 1rem;
+    border-radius: 40px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.8rem;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.planos-banner-btn:hover {
+    transform: translateX(5px);
+    background: linear-gradient(135deg, #5fd43e, #88ff66);
+    color: #0a0c10;
+}
+
+@media (max-width: 576px) {
+    .planos-banner {
+        border-radius: 16px;
+        padding: 1rem;
+    }
+    
+    .planos-banner-content {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .planos-banner-text {
+        text-align: center;
+    }
+    
+    .planos-banner-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}

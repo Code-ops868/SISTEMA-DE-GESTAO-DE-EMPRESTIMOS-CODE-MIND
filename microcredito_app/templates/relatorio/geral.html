@@ -1,0 +1,120 @@
+{% extends "modelo.html" %}
+{% load static %}
+
+{% block title %}Relatórios - CODE-MIND{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/relatorio.css' %}">
+<script src="{% static 'chart/js/chart.umd.min.js' %}"></script>
+<script src="{% static 'bootstrap/js/html2pdf.bundle.min.js' %}"></script>
+<script src="{% static 'bootstrap/js/xlsx.full.min.js' %}"></script>
+{% endblock %}
+{% block content %}
+<div class="relatorios-container">
+    <div class="relatorios-header">
+        <div>
+            <h1 class="relatorios-title">Relatórios Gerais</h1>
+            <p class="relatorios-subtitle">Análise completa do seu negócio de empréstimos</p>
+        </div>
+        <div class="relatorios-actions">
+            <button class="btn-outline-success" onclick="exportarPDF()">
+                <i class="bi bi-file-pdf"></i> PDF
+            </button>
+            <button class="btn-outline-success" onclick="exportarExcel()">
+                <i class="bi bi-file-excel"></i> Excel
+            </button>
+        </div>
+    </div>
+    
+    <!-- Cards de Resumo -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon"><i class="bi bi-people"></i></div>
+            <div class="stat-info">
+                <p class="stat-label">Total de Clientes</p>
+                <h2 class="stat-value">{{ total_clientes|default:"0" }}</h2>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon"><i class="bi bi-calculator"></i></div>
+            <div class="stat-info">
+                <p class="stat-label">Total de Empréstimos</p>
+                <h2 class="stat-value">{{ total_emprestimos|default:"0" }}</h2>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon"><i class="bi bi-cash-stack"></i></div>
+            <div class="stat-info">
+                <p class="stat-label">Valor Total Emprestado</p>
+                <h2 class="stat-value">MT {{ valor_total_emprestado|default:"0"|floatformat:2 }}</h2>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon"><i class="bi bi-graph-up"></i></div>
+            <div class="stat-info">
+                <p class="stat-label">Taxa de Inadimplência</p>
+                <h2 class="stat-value {% if taxa_inadimplencia > 10 %}text-danger{% else %}text-success{% endif %}">
+                    {{ taxa_inadimplencia|default:"0" }}%
+                </h2>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Gráficos -->
+    <div class="charts-row">
+        <div class="chart-card">
+            <div class="chart-header"><h3>Empréstimos por Status</h3></div>
+            <div class="chart-body"><canvas id="chartStatus" height="250"></canvas></div>
+        </div>
+        <div class="chart-card">
+            <div class="chart-header"><h3>Evolução Mensal</h3></div>
+            <div class="chart-body"><canvas id="chartMensal" height="250"></canvas></div>
+        </div>
+    </div>
+    
+    <!-- Tabelas -->
+    <div class="tables-row">
+        <div class="table-card">
+            <div class="table-header"><h3>Top Clientes</h3></div>
+            <div class="table-responsive">
+                <table class="data-table" id="top-clientes-table">
+                    <thead> <tr><th>Cliente</th><th>Empréstimos</th><th>Valor Total</th></tr> </thead>
+                    <tbody>
+                        {% for cliente in top_clientes %}
+                        <tr><td>{{ cliente.nome }}</td><td class="text-center">{{ cliente.total_emprestimos }}</td><td class="text-success">MT {{ cliente.valor_total|floatformat:2 }}</td></tr>
+                        {% empty %}<tr><td colspan="3" class="empty-state"><p>Nenhum dado disponível</p></td></tr>{% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="table-card">
+            <div class="table-header"><h3>Resumo por Status</h3></div>
+            <div class="table-responsive">
+                <table class="data-table" id="resumo-status-table">
+                    <thead> <tr><th>Status</th><th>Quantidade</th><th>Valor</th><th>%</th></tr> </thead>
+                    <tbody>
+                        {% for status in resumo_status %}
+                        <tr>
+                            <td><span class="badge {% if status.status == 'ativo' %}badge-success{% elif status.status == 'atrasado' %}badge-danger{% else %}badge-secondary{% endif %}">{{ status.get_status_display }}</span></td>
+                            <td class="text-center">{{ status.total }}</td>
+                            <td class="text-success">MT {{ status.valor|floatformat:2 }}</td>
+                            <td>{{ status.percentual }}%</td>
+                        </tr>
+                        {% empty %}<tr><td colspan="4" class="empty-state"><p>Nenhum dado disponível</p></td></tr>{% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="{% static 'javascript/relatorio.js' %}"></script>
+<script>
+    window.relatoriosData = {
+        statusLabels: {{ status_labels|safe }},
+        statusData: {{ status_data|safe }},
+        monthlyLabels: {{ monthly_labels|safe }},
+        monthlyData: {{ monthly_data|safe }}
+    };
+</script>
+{% endblock %}

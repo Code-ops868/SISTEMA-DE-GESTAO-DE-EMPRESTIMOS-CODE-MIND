@@ -1,0 +1,95 @@
+{% extends "core/dashboard_base.html" %}
+{% load static %}
+
+{% block title %}Minha Empresa - CODE-MIND{% endblock %}
+
+{% block dashboard_content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <!-- Card do Perfil da Empresa -->
+            <div class="card bg-dark text-center p-4">
+                <div class="mb-3">
+                    {% if empresa.logo %}
+                        <img src="{{ empresa.logo.url }}" alt="{{ empresa.nome }}" class="rounded-circle" width="120" height="120" style="object-fit: cover; border: 3px solid #88ff66;">
+                    {% else %}
+                        <i class="bi bi-building fs-1 text-light-50"></i>
+                    {% endif %}
+                </div>
+                <h4 class="text-white">{{ empresa.nome }}</h4>
+                <p class="text-light-70 small">{{ empresa.email }}</p>
+                <div class="mt-2">
+                    <span class="badge {% if empresa.status == 'ativa' %}bg-success{% else %}bg-secondary{% endif %}">
+                        {{ empresa.get_status_display }}
+                    </span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-8">
+            <!-- Formulário de Configuração -->
+            <div class="card bg-dark">
+                <div class="card-header">
+                    <h5 class="card-title text-success mb-0">Configurações da Empresa</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Logo da Empresa</label>
+                            <input type="file" name="logo" class="form-control" accept="image/*">
+                            <small class="text-light-50">Formatos: JPG, PNG. Tamanho recomendado: 120x120px</small>
+                            {% if empresa.logo %}
+                            <div class="mt-2">
+                                <img src="{{ empresa.logo.url }}" alt="Logo atual" width="60" class="border border-success rounded-circle">
+                                <span class="text-light-50 ms-2">Logo atual</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Nome da Empresa</label>
+                            <input type="text" name="nome" class="form-control" value="{{ empresa.nome }}" required>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Telefone/WhatsApp</label>
+                                <input type="tel" name="telefone" class="form-control" value="{{ empresa.telefone }}" placeholder="84 1234567">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">E-mail de Contato</label>
+                                <input type="email" name="email" class="form-control" value="{{ empresa.email }}">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Endereço</label>
+                            <textarea name="endereco" class="form-control" rows="2" placeholder="Endereço completo da empresa">{{ empresa.endereco }}</textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Website</label>
+                            <input type="url" name="website" class="form-control" value="{{ empresa.website }}" placeholder="https://...">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Status</label>
+                            <select name="status" class="form-control">
+                                <option value="ativa" {% if empresa.status == 'ativa' %}selected{% endif %}>Ativa</option>
+                                <option value="inativa" {% if empresa.status == 'inativa' %}selected{% endif %}>Inativa</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-success">Salvar Configurações</button>
+                            <a href="{% url 'dashboard' %}" class="btn btn-secondary">Cancelar</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

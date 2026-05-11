@@ -1,0 +1,226 @@
+/* ============================================ */
+/* PERFIS - ESTILOS ESPECÍFICOS */
+/* REGRA 3: AZUL ESCURO + VERDE */
+/* ============================================ */
+
+.perfis-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1rem;
+}
+
+.perfis-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.perfis-title {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: #e6edf3;
+    margin-bottom: 0.25rem;
+}
+
+.perfis-subtitle {
+    color: rgba(230, 237, 243, 0.6);
+    font-size: 0.9rem;
+}
+
+/* Grid de Perfis */
+.perfis-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+}
+
+.perfil-card {
+    background: linear-gradient(135deg, rgba(13, 17, 23, 0.8), rgba(10, 12, 16, 0.9));
+    border: 1px solid rgba(56, 139, 253, 0.2);
+    border-radius: 16px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.perfil-card:hover {
+    transform: translateY(-5px);
+    border-color: rgba(136, 255, 102, 0.4);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.perfil-foto {
+    width: 100%;
+    height: 150px;
+    background: linear-gradient(135deg, #0a0e14, #0d1117);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 1px solid rgba(56, 139, 253, 0.2);
+}
+
+.perfil-foto img {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #88ff66;
+}
+
+.perfil-foto i {
+    font-size: 4rem;
+    color: rgba(230, 237, 243, 0.5);
+}
+
+.perfil-info {
+    padding: 1rem;
+}
+
+.perfil-info h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #e6edf3;
+    margin-bottom: 0.5rem;
+}
+
+.perfil-info p {
+    font-size: 0.8rem;
+    color: rgba(230, 237, 243, 0.7);
+    margin-bottom: 0.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.perfil-info i {
+    color: #88ff66;
+    width: 20px;
+}
+
+.perfil-acoes {
+    padding: 1rem;
+    border-top: 1px solid rgba(56, 139, 253, 0.2);
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* Formulário */
+.perfil-form-container {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+}
+
+.perfil-form-card {
+    background: linear-gradient(135deg, rgba(13, 17, 23, 0.9), rgba(10, 12, 16, 0.95));
+    border: 1px solid rgba(56, 139, 253, 0.2);
+    border-radius: 24px;
+    padding: 2rem;
+}
+
+.form-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.form-header i {
+    font-size: 3rem;
+    color: #88ff66;
+}
+
+.form-header h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #e6edf3;
+    margin-top: 1rem;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
+
+.form-group {
+    margin-bottom: 1.25rem;
+}
+
+.form-group label {
+    display: block;
+    color: #e6edf3;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.75rem;
+    background: rgba(13, 17, 23, 0.8);
+    border: 1px solid rgba(56, 139, 253, 0.3);
+    border-radius: 12px;
+    color: #e6edf3;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #88ff66;
+    box-shadow: 0 0 0 3px rgba(136, 255, 102, 0.2);
+}
+
+.current-photo {
+    margin-top: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.current-photo img {
+    border-radius: 50%;
+    border: 2px solid #88ff66;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.btn-sm {
+    padding: 0.25rem 0.75rem;
+    font-size: 0.75rem;
+    border-radius: 8px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #88ff66, #5fd43e);
+    color: #0a0c10;
+    border: none;
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #f85149, #d73a32);
+    color: #fff;
+    border: none;
+}
+
+.btn-secondary {
+    background: transparent;
+    border: 1px solid rgba(56, 139, 253, 0.5);
+    color: #e6edf3;
+}
+
+@media (max-width: 768px) {
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .perfis-grid {
+        grid-template-columns: 1fr;
+    }
+}

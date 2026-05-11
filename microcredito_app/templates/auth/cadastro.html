@@ -1,0 +1,88 @@
+{% extends "modelo.html" %}
+{% load static %}
+
+{% block title %}Cadastro - CODE-MIND{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/cadastro.css' %}">
+<script src="{% static 'javascript/auth.js' %}" defer></script>
+{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <i class="bi bi-person-plus"></i>
+            <h2>Criar nova conta</h2>
+            <p>Preencha os dados abaixo para começar</p>
+        </div>
+
+        <form method="post" action="{% url 'cadastro' %}" autocomplete="off">
+            {% csrf_token %}
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="first_name">
+                        <i class="bi bi-person"></i> Nome
+                    </label>
+                    <input type="text" id="first_name" name="first_name" placeholder="Seu nome" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="last_name">
+                        <i class="bi bi-person-badge"></i> Sobrenome
+                    </label>
+                    <input type="text" id="last_name" name="last_name" placeholder="Seu sobrenome" required>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="email">
+                    <i class="bi bi-envelope"></i> E-mail
+                </label>
+                <input type="email" id="email" name="email" placeholder="seu@email.com" required>
+                <small class="form-hint">Usaremos este e-mail para login e notificações</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="telefone">
+                    <i class="bi bi-whatsapp"></i> Telefone/WhatsApp
+                </label>
+                <input type="tel" id="telefone" name="telefone" placeholder="84 1234567" required>
+                <small class="form-hint">Para receber notificações de vencimento</small>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="senha1">
+                        <i class="bi bi-lock"></i> Senha
+                    </label>
+                    <input type="password" id="senha1" name="senha1" placeholder="••••••••" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="senha2">
+                        <i class="bi bi-lock-fill"></i> Confirmar Senha
+                    </label>
+                    <input type="password" id="senha2" name="senha2" placeholder="••••••••" required>
+                </div>
+            </div>
+            
+            <div class="form-checkbox">
+                <label class="checkbox">
+                    <input type="checkbox" name="termos" required>
+                    <span>Concordo com os <a href="{% url 'termos_e_condicoes' %}" target="_blank">Termos de Uso</a> e <a href="{% url 'politica_privacidade' %}" target="_blank">Política de Privacidade</a></span>
+                </label>
+            </div>
+            
+            <button type="submit" class="btn-auth">
+                <i class="bi bi-check-circle"></i> Criar Conta
+            </button>
+        </form>
+        
+        <div class="auth-footer">
+            <p>Já tem uma conta? <a href="{% url 'login' %}">Faça login aqui</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}

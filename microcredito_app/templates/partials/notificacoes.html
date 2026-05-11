@@ -1,0 +1,31 @@
+{% load static %}
+
+<div class="notificacoes-container">
+    <div class="notificacoes-header">
+        <h5><i class="bi bi-bell"></i> Notificações</h5>
+        <button class="btn-close" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="notificacoes-list">
+        {% if notificacoes %}
+            {% for notif in notificacoes %}
+            <div class="notificacao-item {% if not notif.lida %}nao-lida{% endif %}" data-id="{{ notif.id }}">
+                <div class="notificacao-icon">
+                    <i class="bi bi-{% if notif.tipo == 'vencimento' %}bell{% elif notif.tipo == 'atraso' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
+                </div>
+                <div class="notificacao-content">
+                    <p class="notificacao-mensagem">{{ notif.mensagem }}</p>
+                    <small class="notificacao-data">{{ notif.data_criacao|date:"d/m/Y H:i" }}</small>
+                </div>
+                <button class="notificacao-marcar-lida" onclick="marcarComoLida({{ notif.id }})">
+                    <i class="bi bi-check-circle"></i>
+                </button>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="notificacao-vazia">
+                <i class="bi bi-bell-slash"></i>
+                <p>Nenhuma notificação</p>
+            </div>
+        {% endif %}
+    </div>
+</div>

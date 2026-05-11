@@ -1,0 +1,301 @@
+/* ============================================ */
+/* MODELO - ESTILOS GLOBAIS */
+/* ============================================ */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #0a0c10 0%, #0d1117 50%, #0a0c10 100%);
+    color: #e6edf3;
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+}
+
+/* Efeito Glow */
+.glow-effect {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at 50% 50%, rgba(56, 139, 253, 0.03) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+    transform: translate(-50%, -50%);
+}
+
+/* ============================================ */
+/* NAVBAR */
+/* ============================================ */
+.navbar {
+    position: relative;
+    top: 0;
+    width: 100%;
+    z-index: 1000;
+    background: linear-gradient(135deg, #0a0e14 0%, #0d1117 100%) !important;
+    border-bottom: 1px solid rgba(56, 139, 253, 0.2);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    padding: 0.75rem 0;
+}
+
+.navbar-brand {
+    font-size: 1.25rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    color: #e6edf3 !important;
+}
+
+.navbar-brand:hover {
+    transform: translateY(-2px);
+    text-shadow: 0 0 20px rgba(56, 139, 253, 0.5);
+}
+
+.navbar-brand span {
+    color: #88ff66 !important;
+}
+
+/* Botões Navbar */
+.btn-outline-light {
+    border: 1px solid rgba(56, 139, 253, 0.5);
+    background: rgba(13, 17, 23, 0.8);
+    backdrop-filter: blur(5px);
+    transition: all 0.3s ease;
+    color: #e6edf3;
+}
+
+.btn-outline-light:hover {
+    border-color: #388bfd;
+    background: rgba(56, 139, 253, 0.1);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(56, 139, 253, 0.3);
+}
+
+/* ============================================ */
+/* MAIN E FOOTER */
+/* ============================================ */
+main {
+    flex: 1;
+    width: 100%;
+    position: relative;
+    z-index: 1;
+}
+
+footer {
+    width: 100%;
+    background: linear-gradient(135deg, #0a0e14 0%, #0d1117 100%) !important;
+    border-top: 1px solid rgba(56, 139, 253, 0.2);
+    position: relative;
+    z-index: 1;
+    backdrop-filter: blur(10px);
+    margin-top: auto;
+}
+
+.navbar .container,
+footer .container,
+main .container {
+    width: 100%;
+    max-width: 1320px;
+    margin: 0 auto;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+}
+
+/* ============================================ */
+/* BOTÕES GLOBAIS */
+/* ============================================ */
+.btn-success {
+    background: linear-gradient(135deg, #88ff66 0%, #5fd43e 100%);
+    border: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    color: #0a0c10;
+}
+
+.btn-success:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(136, 255, 102, 0.4);
+    background: linear-gradient(135deg, #5fd43e 0%, #88ff66 100%);
+}
+
+.btn-outline-success {
+    border: 2px solid #88ff66;
+    color: #88ff66;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    background: transparent;
+}
+
+.btn-outline-success:hover {
+    background: rgba(136, 255, 102, 0.1);
+    transform: translateY(-2px);
+    border-color: #88ff66;
+    color: #88ff66;
+}
+
+/* ============================================ */
+/* CARDS */
+/* ============================================ */
+.card {
+    background: linear-gradient(135deg, rgba(13, 17, 23, 0.8) 0%, rgba(10, 12, 16, 0.9) 100%);
+    border: 1px solid rgba(56, 139, 253, 0.2);
+    border-radius: 16px;
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    border-color: rgba(136, 255, 102, 0.4);
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+/* ============================================ */
+/* TABELAS */
+/* ============================================ */
+.table {
+    color: #e6edf3;
+}
+
+.table thead th {
+    border-bottom-color: rgba(56, 139, 253, 0.3);
+    color: #88ff66;
+    font-weight: 600;
+}
+
+.table tbody tr:hover {
+    background: rgba(56, 139, 253, 0.05);
+}
+
+/* ============================================ */
+/* FORMULÁRIOS */
+/* ============================================ */
+.form-control, .form-select {
+    background-color: rgba(13, 17, 23, 0.8) !important;
+    border: 1px solid rgba(56, 139, 253, 0.3) !important;
+    color: #e6edf3 !important;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus, .form-select:focus {
+    background-color: #0a0c10 !important;
+    border-color: #88ff66 !important;
+    box-shadow: 0 0 0 3px rgba(136, 255, 102, 0.2) !important;
+    outline: none;
+}
+
+.form-label {
+    color: #e6edf3 !important;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+.form-text {
+    color: rgba(230, 237, 243, 0.6) !important;
+    font-size: 0.75rem;
+}
+
+/* ============================================ */
+/* ALERTAS */
+/* ============================================ */
+.alert {
+    background: linear-gradient(135deg, rgba(13, 17, 23, 0.9), rgba(10, 12, 16, 0.95));
+    border: 1px solid rgba(56, 139, 253, 0.3);
+    color: #e6edf3;
+    border-radius: 12px;
+}
+
+.alert-danger {
+    border-color: #f85149;
+    background: rgba(248, 81, 73, 0.1);
+}
+
+.alert-success {
+    border-color: #88ff66;
+    background: rgba(136, 255, 102, 0.1);
+}
+
+.alert-warning {
+    border-color: #ffa657;
+    background: rgba(255, 166, 87, 0.1);
+}
+
+/* ============================================ */
+/* UTILITÁRIOS */
+/* ============================================ */
+.text-light-70 {
+    color: rgba(230, 237, 243, 0.7);
+}
+
+.text-light-50 {
+    color: rgba(230, 237, 243, 0.5);
+}
+
+.text-success {
+    color: #88ff66 !important;
+}
+
+/* ============================================ */
+/* SCROLLBAR */
+/* ============================================ */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: #0d1117;
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #388bfd, #88ff66);
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #88ff66, #388bfd);
+}
+
+/* ============================================ */
+/* ANIMAÇÕES */
+/* ============================================ */
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in-up {
+    animation: fadeInUp 0.6s ease-out forwards;
+}
+
+/* ============================================ */
+/* RESPONSIVIDADE */
+/* ============================================ */
+@media (max-width: 768px) {
+    .navbar .container,
+    footer .container,
+    main .container {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+    
+    .navbar-brand {
+        font-size: 1rem;
+    }
+    
+    .btn-outline-light {
+        font-size: 0.8rem;
+        padding: 0.25rem 0.6rem;
+    }
+}

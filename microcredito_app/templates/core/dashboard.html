@@ -1,0 +1,73 @@
+{% extends "core/dashboard_base.html" %}
+{% load static %}
+
+{% block title %}Dashboard - CODEMIND{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+<script src="{% static 'chart/js/chart.umd.min.js' %}"></script>
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="dashboard-container">
+    <!-- Header -->
+    <div class="dashboard-header">
+        <h1 class="dashboard-title">Olá, {{ user.get_full_name|default:user.username }}!</h1>
+        <p class="dashboard-subtitle">Bem-vindo ao seu painel de controle.</p>
+    </div>
+    
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon"><i class="bi bi-people"></i></div>
+            <div class="stat-info">
+                <p class="stat-label">Total de Clientes</p>
+                <h2 class="stat-value">{{ total_clientes|default:"0" }}</h2>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon"><i class="bi bi-calculator"></i></div>
+            <div class="stat-info">
+                <p class="stat-label">Empréstimos Ativos</p>
+                <h2 class="stat-value">{{ emprestimos_ativos|default:"0" }}</h2>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon"><i class="bi bi-cash-stack"></i></div>
+            <div class="stat-info">
+                <p class="stat-label">Total Emprestado</p>
+                <h2 class="stat-value">MT {{ total_emprestado|default:"0"|floatformat:2 }}</h2>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon"><i class="bi bi-graph-up"></i></div>
+            <div class="stat-info">
+                <p class="stat-label">Recebido no Mês</p>
+                <h2 class="stat-value">MT {{ recebido_mes|default:"0"|floatformat:2 }}</h2>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Ações Rápidas -->
+    <div class="quick-actions">
+        <h3 class="quick-title">Ações Rápidas</h3>
+        <div class="quick-actions-grid">
+            <a href="{% url 'cliente_cadastrar' %}" class="quick-action-card">
+                <i class="bi bi-person-plus"></i>
+                <span>Novo Cliente</span>
+            </a>
+            <a href="{% url 'emprestimo_cadastrar' %}" class="quick-action-card">
+                <i class="bi bi-calculator"></i>
+                <span>Novo Empréstimo</span>
+            </a>
+            <a href="{% url 'pagamentos' %}" class="quick-action-card">
+                <i class="bi bi-cash-stack"></i>
+                <span>Registrar Pagamento</span>
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

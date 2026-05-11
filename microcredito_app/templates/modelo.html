@@ -1,0 +1,628 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>{% block title %}CODE-MIND{% endblock %}</title>
+    
+    <!-- Bootstrap 5 CSS - LOCAL -->
+    <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.css' %}">
+    <!-- Bootstrap Icons - LOCAL -->
+    <link rel="stylesheet" href="{% static 'bootstrap_icons/bootstrap-icons.min.css' %}">
+    <!-- Bootstrap fonts - LOCAL -->
+    <link rel="stylesheet" href="{% static 'bootstrap_icons/fonts/bootstrap-icons.woff2' %}">
+    
+    <!-- CSS Personalizado -->
+    <link rel="stylesheet" href="{% static 'css/modelo.css' %}">
+    
+    <style>
+        /* Estilos para notificações de atraso */
+        .notificacao-item.atraso {
+            background: linear-gradient(90deg, rgba(220, 53, 69, 0.2) 0%, rgba(220, 53, 69, 0.05) 100%);
+            border-left: 4px solid #dc3545;
+        }
+        
+        .notificacao-item.atraso:hover {
+            background: linear-gradient(90deg, rgba(220, 53, 69, 0.3) 0%, rgba(220, 53, 69, 0.1) 100%);
+        }
+        
+        .notificacao-item.vencimento {
+            background: linear-gradient(90deg, rgba(255, 193, 7, 0.15) 0%, rgba(255, 193, 7, 0.05) 100%);
+            border-left: 4px solid #ffc107;
+        }
+        
+        .animate-pulse {
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.1); }
+        }
+        
+        .info-cliente {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 8px;
+            border-radius: 6px;
+            margin: 8px 0;
+        }
+        
+        .dias-atraso {
+            font-size: 0.7rem;
+            background: #dc3545;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+        
+        .valor-parcela {
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: #ffc107;
+        }
+    </style>
+    
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <div class="glow-effect"></div>
+    
+    <!-- ============================================ -->
+    <!-- NAVBAR PRINCIPAL -->
+    <!-- ============================================ -->
+    <nav class="navbar navbar-expand navbar-dark shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-semibold" href="{% url 'inicio' %}">
+                <i class="bi bi-code-square me-1"></i>CODE-<span style="color: #88ff66;">MIND</span>
+            </a>
+            <div class="ms-auto d-flex align-items-center gap-2">
+                
+                <!-- ============================================ -->
+                <!-- ÍCONE DE NOTIFICAÇÕES COM DESTAQUE PARA ATRASO -->
+                <!-- ============================================ -->
+                {% if user.is_authenticated %}
+                <div class="dropdown d-inline-block">
+                    <button class="btn btn-outline-light btn-sm position-relative" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-bell"></i>
+                        {% if total_notificacoes > 0 %}
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                            {{ total_notificacoes }}
+                        </span>
+                        {% endif %}
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end bg-dark p-0" style="width: 400px; max-height: 500px; overflow-y: auto;">
+                        <div class="notificacoes-container">
+                            <div class="notificacoes-header p-3 border-bottom border-secondary d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0 text-light"><i class="bi bi-bell"></i> Notificações</h6>
+                                {% if notificacoes %}
+                                <button class="btn btn-sm btn-link text-light-50 p-0" onclick="marcarTodasNotificacoes()" style="font-size: 0.7rem;">
+                                    <i class="bi bi-check2-all"></i> Marcar todas
+                                </button>
+                                {% endif %}
+                            </div>
+                            <div class="notificacoes-list">
+                                {% if notificacoes %}
+                                    {% for notif in notificacoes %}
+                                    <div class="notificacao-item p-3 border-bottom border-secondary {% if notif.tipo == 'atraso' %}atraso{% elif notif.tipo == 'vencimento' %}vencimento{% endif %}" data-id="{{ notif.id }}" id="notif-{{ notif.id }}">
+                                        <div class="d-flex align-items-start gap-3">
+                                            <!-- Ícone conforme o tipo -->
+                                            <div class="notificacao-icon mt-1">
+                                                {% if notif.tipo == 'atraso' %}
+                                                <i class="bi bi-exclamation-triangle-fill text-danger fs-3 animate-pulse"></i>
+                                                {% elif notif.tipo == 'vencimento' %}
+                                                <i class="bi bi-bell-fill text-warning fs-3"></i>
+                                                {% else %}
+                                                <i class="bi bi-info-circle-fill text-info fs-3"></i>
+                                                {% endif %}
+                                            </div>
+                                            
+                                            <div class="notificacao-content flex-grow-1">
+                                                <!-- Título e data -->
+                                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                                    <strong class="{% if notif.tipo == 'atraso' %}text-danger{% elif notif.tipo == 'vencimento' %}text-warning{% else %}text-info{% endif %} fs-6">
+                                                        {% if notif.tipo == 'atraso' %}
+                                                        ⚠️ CLIENTE EM ATRASO
+                                                        {% elif notif.tipo == 'vencimento' %}
+                                                        🔔 VENCIMENTO PRÓXIMO
+                                                        {% else %}
+                                                        ℹ️ INFORMAÇÃO
+                                                        {% endif %}
+                                                    </strong>
+                                                    <small class="text-light-50">{{ notif.data_envio|date:"d/m/Y H:i" }}</small>
+                                                </div>
+                                                
+                                                <!-- INFORMAÇÕES DO CLIENTE -->
+                                                <div class="info-cliente">
+                                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                                        <div>
+                                                            <i class="bi bi-person-circle text-primary"></i>
+                                                            <strong class="text-light ms-1">{{ notif.cliente.nome|default:"Cliente não informado" }}</strong>
+                                                        </div>
+                                                        {% if notif.cliente.telefone %}
+                                                        <div>
+                                                            <i class="bi bi-whatsapp text-success"></i>
+                                                            <span class="text-light-50 ms-1">{{ notif.cliente.telefone }}</span>
+                                                        </div>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                                
+                                                <!-- Mensagem da notificação -->
+                                                <p class="notificacao-mensagem mb-2 small text-light-50">{{ notif.mensagem }}</p>
+                                                
+                                                <!-- INFORMAÇÕES ESPECÍFICAS PARA ATRASO -->
+                                                {% if notif.tipo == 'atraso' and notif.parcela %}
+                                                <div class="mt-2 pt-2 border-top border-secondary">
+                                                    <div class="d-flex flex-wrap gap-3 align-items-center">
+                                                        <div class="dias-atraso">
+                                                            <i class="bi bi-calendar-x"></i> 
+                                                            {% with dias_atraso=notif.parcela.data_vencimento|timesince %}
+                                                                {% if "dia" in dias_atraso %}
+                                                                    {{ dias_atraso|cut:" dias"|cut:" dia" }} dia(s) de atraso
+                                                                {% else %}
+                                                                    {{ dias_atraso }} de atraso
+                                                                {% endif %}
+                                                            {% endwith %}
+                                                        </div>
+                                                        <div class="valor-parcela">
+                                                            <i class="bi bi-cash-stack"></i> 
+                                                            Valor da parcela: MT {{ notif.parcela.valor|floatformat:2 }}
+                                                        </div>
+                                                        <div class="text-warning small">
+                                                            <i class="bi bi-calendar"></i> 
+                                                            Vencimento: {{ notif.parcela.data_vencimento|date:"d/m/Y" }}
+                                                        </div>
+                                                    </div>
+                                                    <div class="mt-2 small text-danger">
+                                                        <i class="bi bi-exclamation-circle"></i>
+                                                        Multa + Juros: Consulte o contrato para valores atualizados
+                                                    </div>
+                                                </div>
+                                                {% endif %}
+                                                
+                                                <!-- INFORMAÇÕES PARA VENCIMENTO PRÓXIMO -->
+                                                {% if notif.tipo == 'vencimento' and notif.parcela %}
+                                                <div class="mt-2 pt-2 border-top border-secondary">
+                                                    <div class="d-flex flex-wrap gap-3">
+                                                        <span class="badge bg-warning text-dark">
+                                                            <i class="bi bi-calendar"></i> Vence em breve
+                                                        </span>
+                                                        <span class="badge bg-info">
+                                                            <i class="bi bi-cash"></i> MT {{ notif.parcela.valor|floatformat:2 }}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                            
+                                            <!-- Botão marcar como lida -->
+                                            <button class="btn btn-sm btn-link text-success p-0 notificacao-marcar-lida" onclick="marcarNotificacaoLida({{ notif.id }})" title="Marcar como lida">
+                                                <i class="bi bi-check-circle fs-5"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="text-center py-5">
+                                        <i class="bi bi-bell-slash fs-1 text-light-50"></i>
+                                        <p class="text-light-50 mt-3 mb-0">Nenhuma notificação</p>
+                                        <small class="text-light-50">Novas notificações aparecerão aqui</small>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- ============================================ -->
+                <!-- DROPDOWN DO USUÁRIO -->
+                <!-- ============================================ -->
+                <div class="dropdown">
+                    <button class="btn btn-outline-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        {% if user.empresa and user.empresa.logo %}
+                            <img src="{{ user.empresa.logo.url }}" alt="{{ user.empresa.nome }}" width="24" height="24" class="rounded-circle me-1" style="object-fit: cover;">
+                        {% else %}
+                            <i class="bi bi-person-circle me-1"></i>
+                        {% endif %}
+                        {{ user.get_full_name|default:user.username }}
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end bg-dark">
+                        {% if user.empresa %}
+                        <li>
+                            <div class="dropdown-item-text text-light">
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    {% if user.empresa.logo %}
+                                        <img src="{{ user.empresa.logo.url }}" alt="Logo" width="40" height="40" class="rounded-circle" style="object-fit: cover;">
+                                    {% else %}
+                                        <i class="bi bi-building fs-4"></i>
+                                    {% endif %}
+                                    <div>
+                                        <strong>{{ user.empresa.nome }}</strong><br>
+                                        <small class="text-light-50">{{ user.email }}</small>
+                                    </div>
+                                </div>
+                                {% if user.empresa.telefone %}
+                                <div class="small text-light-70">
+                                    <i class="bi bi-whatsapp"></i> {{ user.empresa.telefone }}
+                                </div>
+                                {% endif %}
+                                {% if user.empresa.endereco %}
+                                <div class="small text-light-70 mt-1">
+                                    <i class="bi bi-geo-alt"></i> {{ user.empresa.endereco|truncatechars:40 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="dropdown-divider"></div>
+                        </li>
+                        {% endif %}
+                        <li><a class="dropdown-item text-light" href="{% url 'dashboard' %}"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a></li>
+                        <li><a class="dropdown-item text-light" href="{% url 'empresa_config' %}"><i class="bi bi-building me-2"></i>Minha Empresa</a></li>
+                        <li><a class="dropdown-item text-light" href="{% url 'config_notificacoes' %}"><i class="bi bi-bell me-2"></i>Notificações</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="{% url 'logout' %}"><i class="bi bi-box-arrow-right me-2"></i>Sair</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- ============================================ -->
+    <!-- MAIN CONTENT -->
+    <!-- ============================================ -->
+    <main>
+        <div class="container py-4">
+            {% if messages %}
+                {% for message in messages %}
+                <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">
+                    <i class="bi bi-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-triangle{% else %}info-circle{% endif %} me-2"></i>
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endfor %}
+            {% endif %}
+            
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+    
+    <!-- ============================================ -->
+    <!-- FOOTER -->
+    <!-- ============================================ -->
+    <footer class="text-light py-3">
+        <div class="container">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
+                <div class="text-center text-md-start">
+                    <a href="{% url 'inicio' %}" class="text-light text-decoration-none fw-bold">CODE-<span style="color: #88ff66;">MIND</span></a>
+                </div>
+                <div class="text-center">
+                    <span class="small">&copy; {% now 'Y' %} Todos os direitos reservados.</span>
+                </div>
+                <div class="text-center text-md-end">
+                    <a href="{% url 'termos_e_condicoes' %}" class="text-light text-decoration-none small me-3">Termos</a>
+                    <a href="{% url 'politica_privacidade' %}" class="text-light text-decoration-none small">Privacidade</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- ============================================ -->
+    <!-- SCRIPTS -->
+    <!-- ============================================ -->
+    <!-- jQuery - LOCAL -->
+    <!--<script src="{% static 'javascript/jquery-3.7.0.min.js' %}"></script> -->
+    
+    <!-- Bootstrap JS - LOCAL -->
+    <script src="{% static 'bootstrap/js/bootstrap.bundle.js' %}"></script>
+    
+    <!-- JS Personalizado -->
+    <script src="{% static 'javascript/modelo.js' %}"></script>
+    
+    <!-- NOTIFICAÇÕES INTERNAS -->
+    <script src="{% static 'javascript/notificacoes.js' %}"></script>
+    
+    <!-- PUSH NOTIFICATIONS -->
+    <script src="{% static 'javascript/push_notificacoes.js' %}"></script>
+    
+    {% block extra_scripts %}{% endblock %}
+    
+    <!-- ============================================ -->
+    <!-- MODAL PARA PERMISSÃO DE NOTIFICAÇÕES PUSH -->
+    <!-- ============================================ -->
+    {% if user.is_authenticated %}
+    <div class="modal fade" id="pushPermissionModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content bg-dark">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title text-light">
+                        <i class="bi bi-bell-fill text-warning"></i> Ativar Notificações
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" id="btnFecharModal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-center mb-3">
+                        <i class="bi bi-exclamation-triangle-fill text-warning fs-1"></i>
+                    </div>
+                    <p class="text-light text-center"><strong>⚠️ ATENÇÃO!</strong></p>
+                    <p class="text-light">Se não ativar as notificações, você <strong class="text-danger">NÃO RECEBERÁ ALERTAS</strong> de:</p>
+                    <ul class="text-light-50">
+                        <li><i class="bi bi-exclamation-triangle text-danger"></i> Parcelas em atraso</li>
+                        <li><i class="bi bi-bell text-warning"></i> Vencimentos próximos</li>
+                        <li><i class="bi bi-check-circle text-success"></i> Confirmações de pagamento</li>
+                    </ul>
+                    <p class="text-danger text-center small mt-3">
+                        <i class="bi bi-info-circle"></i> Sem notificações, você pode esquecer pagamentos e pagar MULTAS!
+                    </p>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-secondary" id="btnAgoraNao" data-bs-dismiss="modal">Agora não</button>
+                    <button type="button" class="btn btn-success" id="ativar-notificacoes">
+                        <i class="bi bi-bell-fill"></i> Ativar notificações
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Aguardar o DOM e o Bootstrap estarem completamente carregados
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🔔 Inicializando sistema de notificações push...');
+            
+            // Verificar se o navegador suporta notifications
+            if (!('Notification' in window)) {
+                console.log('❌ Navegador não suporta notificações');
+                return;
+            }
+            
+            // Função para verificar se já tem inscrição via AJAX
+            function verificarInscricao() {
+                fetch('/notificacoes/verificar_inscricao/', {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Se já tem inscrição no servidor
+                    if (data.has_subscription) {
+                        console.log('✅ Cliente já está inscrito nas notificações');
+                        return;
+                    }
+                    
+                    // Verificar o estado da permissão no navegador
+                    if (Notification.permission === 'granted') {
+                        console.log('✅ Cliente protegido: receberá alertas de atraso');
+                        if (typeof pushNotifications !== 'undefined') {
+                            pushNotifications.inscreverUsuario();
+                        }
+                        
+                    } else if (Notification.permission === 'default') {
+                        console.log('⚠️ Cliente ainda não ativou notificações');
+                        const modalElement = document.getElementById('pushPermissionModal');
+                        if (modalElement) {
+                            const modal = new bootstrap.Modal(modalElement);
+                            modal.show();
+                        }
+                        
+                    } else if (Notification.permission === 'denied') {
+                        console.log('❌ Cliente bloqueou as notificações');
+                        const alertDiv = document.createElement('div');
+                        alertDiv.className = 'alert alert-warning alert-dismissible fade show m-3';
+                        alertDiv.innerHTML = `
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            <strong>⚠️ Você bloqueou as notificações!</strong> 
+                            Para receber alertas de atraso e evitar multas, 
+                            <a href="#" onclick="abrirConfiguracoesNotificacoes(); return false;" class="alert-link">clique aqui e ative manualmente</a>.
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        `;
+                        document.querySelector('main').prepend(alertDiv);
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro ao verificar inscrição:', error);
+                    if (Notification.permission === 'default') {
+                        const modalElement = document.getElementById('pushPermissionModal');
+                        if (modalElement) {
+                            const modal = new bootstrap.Modal(modalElement);
+                            modal.show();
+                        }
+                    }
+                });
+            }
+            
+            // Função auxiliar para abrir configurações do navegador
+            window.abrirConfiguracoesNotificacoes = function() {
+                alert('Para ativar notificações:\n\nChrome: Clique no cadeado 🔒 → Configurações do site → Notificações → Permitir\nFirefox: Clique no ícone 🔒 → Permissões → Notificações → Permitir');
+            }
+            
+            verificarInscricao();
+        });
+        
+        // Botão "Agora não"
+        document.getElementById('btnAgoraNao')?.addEventListener('click', function() {
+            console.log('👤 Usuário escolheu "Agora não"');
+        });
+        
+        // Botão "Ativar notificações"
+        document.getElementById('ativar-notificacoes')?.addEventListener('click', async function() {
+            console.log('🔔 Usuário clicou em Ativar notificações');
+            
+            if (typeof pushNotifications === 'undefined') {
+                console.error('❌ pushNotifications não está definido!');
+                alert('Erro: Sistema de notificações não carregado. Recarregue a página.');
+                return;
+            }
+            
+            try {
+                const resultado = await pushNotifications.solicitarPermissao();
+                
+                if (resultado) {
+                    console.log('✅ Notificações ativadas com sucesso!');
+                    const modalElement = document.getElementById('pushPermissionModal');
+                    if (modalElement) {
+                        const modal = bootstrap.Modal.getInstance(modalElement);
+                        if (modal) {
+                            modal.hide();
+                        }
+                    }
+                } else {
+                    console.log('❌ Falha ao ativar notificações');
+                }
+            } catch (error) {
+                console.error('Erro ao ativar notificações:', error);
+            }
+        });
+    </script>
+    {% endif %}
+    <!-- Firebase Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/12.12.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.12.1/firebase-messaging-compat.js"></script>
+    
+    <script>
+    // Sua configuração do Firebase
+    const firebaseConfig = {
+        apiKey: "AIzaSyCmRtDskJ4qkIA3RNmDKwR8XvsazHBic2w",
+        authDomain: "codemindmicrocredito-app.firebaseapp.com",
+        projectId: "codemindmicrocredito-app",
+        storageBucket: "codemindmicrocredito-app.firebasestorage.app",
+        messagingSenderId: "319943045295",
+        appId: "1:319943045295:web:3da299b2c07580ff82645a",
+        measurementId: "G-VC4H0PKTXK"
+    };
+    
+    // Inicializar Firebase
+    firebase.initializeApp(firebaseConfig);
+    const messaging = firebase.messaging();
+    
+    // Registrar Service Worker
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/firebase-messaging-sw.js')
+            .then(function(registration) {
+                console.log('✅ Service Worker registrado com sucesso:', registration);
+            })
+            .catch(function(err) {
+                console.log('❌ Erro ao registrar Service Worker:', err);
+            });
+    }
+    
+    // Função para obter token FCM
+    async function registrarNotificacoes() {
+        // Verificar se o navegador suporta notificações
+        if (!('Notification' in window)) {
+            console.log('❌ Navegador não suporta notificações');
+            return;
+        }
+        
+        // Solicitar permissão
+        let permission = Notification.permission;
+        
+        if (permission !== 'granted') {
+            permission = await Notification.requestPermission();
+        }
+        
+        if (permission !== 'granted') {
+            console.log('❌ Permissão negada para notificações');
+            return;
+        }
+        
+        try {
+            // Chave VAPID - Você precisa pegar no Firebase Console
+            // Vá em: Configurações do Projeto > Cloud Messaging > Chave do servidor (Web Push certificates)
+            // Se não tiver, clique em "Generate Key Pair"
+            const vapidKey = 'BFyUoVAuVBAhl8Gi0UR6w8GMGd0W3UdFponSNsVHdn9IL85f63WAuPnqyqsjLEqVA_wMYuBe6QuYup2ULiS_2Hc';  // ⚠️ VOCÊ PRECISA PEGAR ESSA CHAVE NO FIREBASE
+            
+            const token = await messaging.getToken({ vapidKey: vapidKey });
+            
+            if (token) {
+                console.log('✅ Token FCM obtido:', token);
+                
+                // Enviar token para o backend
+                await enviarTokenParaBackend(token);
+            } else {
+                console.log('❌ Não foi possível obter token');
+            }
+        } catch (error) {
+            console.error('❌ Erro ao obter token:', error);
+        }
+    }
+    
+    // Enviar token para o backend
+    async function enviarTokenParaBackend(token) {
+        const csrfToken = getCSRFToken();
+        
+        try {
+            const response = await fetch('/api/devices/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({
+                    registration_id: token,
+                    type: 'web',
+                    active: true
+                })
+            });
+            
+            if (response.ok) {
+                console.log('✅ Token registrado no backend com sucesso!');
+            } else {
+                const data = await response.json();
+                console.log('❌ Erro ao registrar token no backend:', data);
+            }
+        } catch (error) {
+            console.error('❌ Erro ao enviar token:', error);
+        }
+    }
+    
+    // Função para obter CSRF token
+    function getCSRFToken() {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, 10) === 'csrftoken=') {
+                    cookieValue = decodeURIComponent(cookie.substring(10));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    
+    // Registrar ao carregar a página
+    document.addEventListener('DOMContentLoaded', function() {
+        // Pequeno delay para garantir que tudo carregou
+        setTimeout(registrarNotificacoes, 1000);
+    });
+    
+    // Receber mensagens enquanto o navegador está aberto
+    messaging.onMessage((payload) => {
+        console.log('📨 Mensagem recebida em foreground:', payload);
+        
+        // Exibir notificação customizada
+        if (Notification.permission === 'granted') {
+            const notification = new Notification(
+                payload.notification?.title || '💰 CODE-MIND',
+                {
+                    body: payload.notification?.body || '',
+                    icon: '/static/img/logo.png',
+                    vibrate: [200, 100, 200]
+                }
+            );
+            
+            notification.onclick = function() {
+                window.focus();
+                const url = payload.data?.url || '/dashboard/';
+                window.location.href = url;
+            };
+        }
+    });
+    </script>
+</body>
+</html>

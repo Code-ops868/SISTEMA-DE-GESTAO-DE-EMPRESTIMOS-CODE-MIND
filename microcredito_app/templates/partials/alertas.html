@@ -1,0 +1,14 @@
+{% load static %}
+
+<div id="alerta-container" class="alerta-container"></div>
+
+<link rel="stylesheet" href="{% static 'css/alertas.css' %}">
+<script src="{% static 'javascript/alertas.js' %}"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof alertas !== 'undefined') {
+            console.log('✅ Alertas carregados');
+        }
+    });
+</script>

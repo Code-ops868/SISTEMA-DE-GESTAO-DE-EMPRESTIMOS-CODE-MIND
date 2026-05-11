@@ -1,0 +1,78 @@
+{% extends 'modelo.html' %}
+
+{% block title %}Status do Pagamento{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header text-center">
+                    <h4>Status do Pagamento</h4>
+                </div>
+                <div class="card-body text-center">
+                    
+                    {% if transacao.status == 'processando' %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-spinner fa-spin fa-3x mb-3"></i>
+                            <h5>Pagamento em Processamento</h5>
+                            <p>Seu pagamento está sendo processado. Aguarde a confirmação.</p>
+                        </div>
+                        
+                    {% elif transacao.status == 'sucesso' %}
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle fa-3x mb-3"></i>
+                            <h5>Pagamento Confirmado!</h5>
+                            <p>Seu pagamento foi processado com sucesso.</p>
+                            <a href="{% url 'dashboard' %}" class="btn btn-success mt-3">
+                                Ir para o Dashboard
+                            </a>
+                        </div>
+                        
+                    {% elif transacao.status == 'falhou' %}
+                        <div class="alert alert-danger">
+                            <i class="fas fa-times-circle fa-3x mb-3"></i>
+                            <h5>Pagamento Falhou</h5>
+                            <p>O pagamento não foi concluído. Tente novamente.</p>
+                            <a href="{% url 'planos' %}" class="btn btn-danger mt-3">
+                                Voltar aos Planos
+                            </a>
+                        </div>
+                        
+                    {% else %}
+                        <div class="alert alert-secondary">
+                            <i class="fas fa-clock fa-3x mb-3"></i>
+                            <h5>Aguardando Pagamento</h5>
+                            <p>Seu pedido foi criado. Complete o pagamento no seu telefone.</p>
+                        </div>
+                    {% endif %}
+                    
+                    <hr>
+                    
+                    <div class="text-left mt-3">
+                        <p><strong>Referência:</strong> {{ transacao.referencia }}</p>
+                        <p><strong>Valor:</strong> {{ transacao.valor }} MT</p>
+                        <p><strong>Status:</strong> {{ transacao.get_status_display }}</p>
+                        {% if transacao.telefone %}
+                            <p><strong>Telefone:</strong> {{ transacao.telefone }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mt-4">
+                        <a href="{% url 'planos' %}" class="btn btn-outline-primary">
+                            Voltar para Planos
+                        </a>
+                        
+                        {% if transacao.status == 'processando' %}
+                            <meta http-equiv="refresh" content="5">
+                            <small class="d-block mt-2 text-muted">
+                                Atualizando automaticamente a cada 5 segundos...
+                            </small>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

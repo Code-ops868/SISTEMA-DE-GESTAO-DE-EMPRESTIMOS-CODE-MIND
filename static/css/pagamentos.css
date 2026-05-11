@@ -1,0 +1,500 @@
+/* ============================================ */
+/* PAGAMENTOS - ESTILOS ESPECÍFICOS */
+/* REGRA 3: AZUL ESCURO + VERDE */
+/* ============================================ */
+
+.pagamentos-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 1rem;
+}
+
+/* ============================================ */
+/* HEADER */
+/* ============================================ */
+.pagamentos-header {
+    margin-bottom: 2rem;
+}
+
+.pagamentos-title {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: #e6edf3;
+    margin-bottom: 0.25rem;
+}
+
+.pagamentos-subtitle {
+    color: rgba(230, 237, 243, 0.6);
+    font-size: 0.9rem;
+}
+
+/* ============================================ */
+/* STATS GRID - CARDS */
+/* ============================================ */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: linear-gradient(135deg, rgba(13, 17, 23, 0.8) 0%, rgba(10, 12, 16, 0.9) 100%);
+    border: 1px solid rgba(56, 139, 253, 0.2);
+    border-radius: 16px;
+    padding: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(136, 255, 102, 0.4);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.stat-icon i {
+    font-size: 2rem;
+    color: #88ff66;
+}
+
+.stat-info {
+    flex: 1;
+}
+
+.stat-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: rgba(230, 237, 243, 0.5);
+    margin-bottom: 0.25rem;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #88ff66;
+    margin: 0;
+}
+
+/* ============================================ */
+/* TABS */
+/* ============================================ */
+.nav-tabs {
+    border-bottom: 1px solid rgba(56, 139, 253, 0.2);
+}
+
+.nav-tabs .nav-link {
+    color: rgba(230, 237, 243, 0.7);
+    background: transparent;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.nav-tabs .nav-link:hover {
+    color: #88ff66;
+}
+
+.nav-tabs .nav-link.active {
+    color: #88ff66;
+    border-bottom: 2px solid #88ff66;
+}
+
+.nav-tabs .badge {
+    margin-left: 0.5rem;
+}
+
+/* ============================================ */
+/* TABLES */
+/* ============================================ */
+.table-card {
+    background: linear-gradient(135deg, rgba(13, 17, 23, 0.8) 0%, rgba(10, 12, 16, 0.9) 100%);
+    border: 1px solid rgba(56, 139, 253, 0.2);
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+}
+
+.table-header {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid rgba(56, 139, 253, 0.2);
+}
+
+.table-header h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #e6edf3;
+    margin: 0;
+}
+
+.table-responsive {
+    overflow-x: auto;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.data-table th {
+    text-align: left;
+    padding: 1rem;
+    color: #88ff66;
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid rgba(56, 139, 253, 0.2);
+    background: rgba(13, 17, 23, 0.5);
+}
+
+.data-table td {
+    padding: 1rem;
+    color: #e6edf3;
+    font-size: 0.875rem;
+    border-bottom: 1px solid rgba(56, 139, 253, 0.1);
+    vertical-align: middle;
+}
+
+.data-table tbody tr:hover {
+    background: rgba(56, 139, 253, 0.05);
+}
+
+/* Linha de destaque para atrasadas */
+.table-danger-row {
+    background: rgba(248, 81, 73, 0.05) !important;
+}
+
+.table-danger-row:hover {
+    background: rgba(248, 81, 73, 0.1) !important;
+}
+
+/* ============================================ */
+/* BADGES */
+/* ============================================ */
+.badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 500;
+}
+
+.badge-success {
+    background: linear-gradient(135deg, #88ff66, #5fd43e);
+    color: #0a0c10;
+}
+
+.badge-danger {
+    background: linear-gradient(135deg, #f85149, #d73a32);
+    color: #fff;
+}
+
+.badge-warning {
+    background: linear-gradient(135deg, #ffa657, #f0883e);
+    color: #0a0c10;
+}
+
+.badge-info {
+    background: linear-gradient(135deg, #388bfd, #1f6feb);
+    color: #fff;
+}
+
+.bg-danger {
+    background: linear-gradient(135deg, #f85149, #d73a32) !important;
+}
+
+.bg-warning {
+    background: linear-gradient(135deg, #ffa657, #f0883e) !important;
+    color: #0a0c10;
+}
+
+.bg-success {
+    background: linear-gradient(135deg, #88ff66, #5fd43e) !important;
+    color: #0a0c10;
+}
+
+/* ============================================ */
+/* BUTTONS */
+/* ============================================ */
+.btn-sm {
+    padding: 0.25rem 0.75rem;
+    font-size: 0.75rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+}
+
+.btn-sm i {
+    margin-right: 0.25rem;
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #88ff66, #5fd43e);
+    color: #0a0c10;
+}
+
+.btn-success:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(136, 255, 102, 0.3);
+}
+
+.btn-warning {
+    background: linear-gradient(135deg, #ffa657, #f0883e);
+    color: #0a0c10;
+}
+
+.btn-warning:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255, 166, 87, 0.3);
+}
+
+.btn-outline-info {
+    background: transparent;
+    border: 1px solid #388bfd;
+    color: #388bfd;
+}
+
+.btn-outline-info:hover {
+    background: rgba(56, 139, 253, 0.1);
+    transform: translateY(-2px);
+}
+
+.btn-outline-success {
+    background: transparent;
+    border: 1px solid #88ff66;
+    color: #88ff66;
+}
+
+.btn-outline-success:hover {
+    background: rgba(136, 255, 102, 0.1);
+    transform: translateY(-2px);
+}
+
+.btn-secondary {
+    background: rgba(13, 17, 23, 0.8);
+    border: 1px solid rgba(56, 139, 253, 0.3);
+    color: #e6edf3;
+}
+
+.btn-secondary:hover {
+    background: rgba(56, 139, 253, 0.2);
+    transform: translateY(-2px);
+}
+
+/* ============================================ */
+/* EMPTY STATE */
+/* ============================================ */
+.empty-state {
+    text-align: center;
+    padding: 3rem !important;
+    color: rgba(230, 237, 243, 0.5);
+}
+
+.empty-state i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    display: block;
+}
+
+.empty-state p {
+    margin-bottom: 0;
+    font-size: 1rem;
+}
+
+/* ============================================ */
+/* MODAL */
+/* ============================================ */
+.modal-content {
+    background: linear-gradient(135deg, #0a0e14, #0d1117);
+    border: 1px solid rgba(56, 139, 253, 0.2);
+    border-radius: 20px;
+}
+
+.modal-header {
+    border-bottom: 1px solid rgba(56, 139, 253, 0.2);
+}
+
+.modal-footer {
+    border-top: 1px solid rgba(56, 139, 253, 0.2);
+}
+
+.modal .form-control,
+.modal .form-select {
+    background-color: rgba(13, 17, 23, 0.8);
+    border: 1px solid rgba(56, 139, 253, 0.3);
+    color: #e6edf3;
+    border-radius: 10px;
+    padding: 0.6rem 0.75rem;
+}
+
+.modal .form-control:focus,
+.modal .form-select:focus {
+    border-color: #88ff66;
+    box-shadow: 0 0 0 3px rgba(136, 255, 102, 0.2);
+    outline: none;
+}
+
+.modal .form-label {
+    color: #e6edf3;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+/* ============================================ */
+/* RESPONSIVIDADE */
+/* ============================================ */
+@media (max-width: 768px) {
+    .pagamentos-container {
+        padding: 0.5rem;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+    
+    .stat-card {
+        padding: 1rem;
+    }
+    
+    .stat-icon i {
+        font-size: 1.5rem;
+    }
+    
+    .stat-value {
+        font-size: 1.25rem;
+    }
+    
+    .nav-tabs .nav-link {
+        padding: 0.5rem 1rem;
+        font-size: 0.8rem;
+    }
+    
+    .data-table th,
+    .data-table td {
+        padding: 0.75rem;
+        font-size: 0.75rem;
+    }
+    
+    .btn-sm {
+        padding: 0.2rem 0.5rem;
+        font-size: 0.7rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .pagamentos-title {
+        font-size: 1.25rem;
+    }
+    
+    .nav-tabs {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+    }
+    
+    .nav-tabs .nav-link {
+        white-space: nowrap;
+    }
+    
+    .table-card {
+        margin-bottom: 1rem;
+    }
+    
+    .empty-state {
+        padding: 2rem !important;
+    }
+    
+    .empty-state i {
+        font-size: 2rem;
+    }
+}
+
+/* ============================================ */
+/* UTILITÁRIOS */
+/* ============================================ */
+.text-success {
+    color: #88ff66 !important;
+}
+
+.text-warning {
+    color: #ffa657 !important;
+}
+
+.text-danger {
+    color: #f85149 !important;
+}
+
+.text-light-70 {
+    color: rgba(230, 237, 243, 0.7);
+}
+
+.text-light-50 {
+    color: rgba(230, 237, 243, 0.5);
+}
+
+.text-center {
+    text-align: center;
+}
+
+.fw-bold {
+    font-weight: 700;
+}
+/* Forçar que o modal e seus elementos sejam clicáveis */
+.modal {
+    z-index: 1050 !important;
+}
+
+.modal-backdrop {
+    z-index: 1040 !important;
+    pointer-events: none !important;
+}
+
+.modal-backdrop.show {
+    opacity: 0.5 !important;
+    pointer-events: none !important;
+}
+
+.modal-content {
+    pointer-events: auto !important;
+    z-index: 1060 !important;
+}
+
+.modal-body,
+.modal-footer,
+.modal-header {
+    pointer-events: auto !important;
+}
+
+#modalPagamento select,
+#modalPagamento input,
+#modalPagamento button {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+}
+
+#modal_forma_pagamento,
+#modal_comprovante,
+.btn-confirmar,
+.btn-secondary {
+    position: relative;
+    z-index: 1070 !important;
+    pointer-events: auto !important;
+}
+/* Ignorar o aviso de aria-hidden (não afeta o funcionamento) */
+.modal[aria-hidden="true"] {
+    visibility: hidden;
+}
+
+.modal[aria-hidden="true"] .modal-content {
+    pointer-events: none;
+}

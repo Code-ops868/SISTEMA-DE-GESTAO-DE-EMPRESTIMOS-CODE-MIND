@@ -1,0 +1,72 @@
+{% extends "modelo.html" %}
+{% load static %}
+
+{% block title %}Novo Empréstimo - CODE-MIND{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/emprestimos.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="emprestimo-form-container">
+    <div class="emprestimo-form-card">
+        <div class="form-header">
+            <i class="bi bi-calculator-fill"></i>
+            <h2>Novo Empréstimo</h2>
+            <p>Preencha os dados para simular e cadastrar um novo empréstimo</p>
+        </div>
+        <form method="post" action="{% url 'emprestimo_cadastrar' %}" id="formEmprestimo">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="cliente"><i class="bi bi-person"></i> Cliente</label>
+                <select id="cliente" name="cliente" class="form-control" required>
+                    <option value="">Selecione um cliente</option>
+                    {% for cliente in clientes %}
+                    <option value="{{ cliente.id }}">{{ cliente.nome }} - {{ cliente.telefone }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="valor"><i class="bi bi-cash"></i> Valor (MT)</label>
+                    <input type="text" id="valor" name="valor" class="form-control" placeholder="0,00" required>
+                </div>
+                <div class="form-group">
+                    <label for="taxa_juros"><i class="bi bi-percent"></i> Taxa de Juros (%)</label>
+                    <input type="number" id="taxa_juros" name="taxa_juros" class="form-control" step="0.01" placeholder="0.00" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="quantidade_parcelas"><i class="bi bi-grid"></i> Número de Parcelas</label>
+                    <input type="number" id="quantidade_parcelas" name="quantidade_parcelas" class="form-control" min="1" max="60" required>
+                </div>
+                <div class="form-group">
+                    <label for="data_primeiro_vencimento"><i class="bi bi-calendar"></i> Primeiro Vencimento</label>
+                    <input type="date" id="data_primeiro_vencimento" name="data_primeiro_vencimento" class="form-control" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="tipo_juros"><i class="bi bi-calculator"></i> Tipo de Juros</label>
+                <select id="tipo_juros" name="tipo_juros" class="form-control" required>
+                    <option value="composto">Juros Compostos (PRICE - Parcelas Fixas)</option>
+                    <option value="simples">Juros Simples</option>
+                </select>
+            </div>
+            <div class="simulacao-card" id="simulacao-card" style="display:none;">
+                <div class="simulacao-header"><i class="bi bi-calculator"></i><h4>Simulação</h4></div>
+                <div class="simulacao-content">
+                    <div class="simulacao-row"><span>Valor da Parcela:</span><strong id="valor-parcela">MT 0,00</strong></div>
+                    <div class="simulacao-row"><span>Total a Pagar:</span><strong id="total-pagar">MT 0,00</strong></div>
+                    <div class="simulacao-row"><span>Total de Juros:</span><strong id="total-juros">MT 0,00</strong></div>
+                </div>
+            </div>
+            <div class="form-actions">
+                <a href="{% url 'emprestimo' %}" class="btn-secondary"><i class="bi bi-arrow-left"></i> Cancelar</a>
+                <button type="submit" class="btn-primary" id="btn-submit"><i class="bi bi-check-circle"></i> Simular e Cadastrar</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script src="{% static 'javascript/emprestimos.js' %}"></script>
+{% endblock %}

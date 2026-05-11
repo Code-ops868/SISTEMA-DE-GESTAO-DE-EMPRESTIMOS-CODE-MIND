@@ -1,0 +1,328 @@
+/* ============================================ */
+/* DASHBOARD - MENU LATERAL E CONTEÚDO */
+/* REGRA 3: AZUL ESCURO + VERDE */
+/* ============================================ */
+
+/* ============================================ */
+/* LAYOUT PRINCIPAL */
+/* ============================================ */
+.dashboard-wrapper {
+    display: flex;
+    min-height: calc(100vh - 72px);
+    position: relative;
+}
+
+/* ============================================ */
+/* MENU LATERAL */
+/* ============================================ */
+.sidebar {
+    width: 280px;
+    background: linear-gradient(135deg, #0a0e14 0%, #0d1117 100%);
+    border-right: 1px solid rgba(56, 139, 253, 0.2);
+    backdrop-filter: blur(10px);
+    position: fixed;
+    height: calc(100vh - 72px);
+    overflow-y: auto;
+    z-index: 100;
+    transition: all 0.3s ease;
+}
+
+.sidebar-header {
+    padding: 1.5rem;
+    text-align: center;
+    border-bottom: 1px solid rgba(56, 139, 253, 0.2);
+}
+
+.user-avatar {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 1rem;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #388bfd, #88ff66);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.user-avatar i,
+.user-avatar img {
+    font-size: 3rem;
+    color: #fff;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.user-info h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #e6edf3;
+    margin-bottom: 0.25rem;
+}
+
+.user-info span {
+    font-size: 0.75rem;
+    color: rgba(230, 237, 243, 0.6);
+}
+
+/* Navegação */
+.sidebar-nav {
+    padding: 1rem 0;
+}
+
+.nav-section {
+    margin-bottom: 1.5rem;
+}
+
+.nav-title {
+    padding: 0.5rem 1.5rem;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: rgba(230, 237, 243, 0.5);
+    font-weight: 600;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1.5rem;
+    color: #e6edf3;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+}
+
+.nav-item i {
+    width: 24px;
+    font-size: 1.2rem;
+    color: rgba(230, 237, 243, 0.7);
+}
+
+.nav-item:hover {
+    background: rgba(56, 139, 253, 0.1);
+    color: #88ff66;
+}
+
+.nav-item:hover i {
+    color: #88ff66;
+}
+
+.nav-item.active {
+    background: linear-gradient(90deg, rgba(56, 139, 253, 0.2), transparent);
+    border-left: 3px solid #88ff66;
+    color: #88ff66;
+}
+
+.nav-item.active i {
+    color: #88ff66;
+}
+
+/* Scrollbar do menu */
+.sidebar::-webkit-scrollbar {
+    width: 5px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+    background: rgba(13, 17, 23, 0.5);
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #388bfd, #88ff66);
+    border-radius: 5px;
+}
+
+/* ============================================ */
+/* CONTEÚDO PRINCIPAL */
+/* ============================================ */
+.main-content {
+    flex: 1;
+    margin-left: 280px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.menu-toggle {
+    display: none;
+    background: transparent;
+    border: none;
+    color: #e6edf3;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    cursor: pointer;
+}
+
+/* ============================================ */
+/* DASHBOARD CONTAINER */
+/* ============================================ */
+.dashboard-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.dashboard-header {
+    margin-bottom: 2rem;
+}
+
+.dashboard-title {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: #e6edf3;
+    margin-bottom: 0.5rem;
+}
+
+.dashboard-subtitle {
+    color: rgba(230, 237, 243, 0.6);
+    font-size: 0.9rem;
+}
+
+/* Stats Cards */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: linear-gradient(135deg, rgba(13, 17, 23, 0.8) 0%, rgba(10, 12, 16, 0.9) 100%);
+    border: 1px solid rgba(56, 139, 253, 0.2);
+    border-radius: 16px;
+    padding: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(136, 255, 102, 0.4);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.stat-icon i {
+    font-size: 2rem;
+    color: #88ff66;
+}
+
+.stat-info {
+    flex: 1;
+}
+
+.stat-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: rgba(230, 237, 243, 0.5);
+    margin-bottom: 0.25rem;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #88ff66;
+    margin: 0;
+}
+
+/* Quick Actions */
+.quick-actions {
+    margin-top: 2rem;
+}
+
+.quick-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #e6edf3;
+    margin-bottom: 1rem;
+}
+
+.quick-actions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.quick-action-card {
+    background: linear-gradient(135deg, rgba(13, 17, 23, 0.8) 0%, rgba(10, 12, 16, 0.9) 100%);
+    border: 1px solid rgba(56, 139, 253, 0.2);
+    border-radius: 12px;
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.quick-action-card:hover {
+    transform: translateY(-3px);
+    border-color: #88ff66;
+}
+
+.quick-action-card i {
+    font-size: 1.5rem;
+    color: #88ff66;
+}
+
+.quick-action-card span {
+    color: #e6edf3;
+    font-weight: 500;
+}
+
+/* ============================================ */
+/* RESPONSIVIDADE */
+/* ============================================ */
+@media (max-width: 768px) {
+    .sidebar {
+        transform: translateX(-100%);
+        position: fixed;
+        top: 72px;
+        z-index: 1000;
+    }
+    
+    .sidebar.open {
+        transform: translateX(0);
+    }
+    
+    .main-content {
+        margin-left: 0;
+    }
+    
+    .menu-toggle {
+        display: block;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+    
+    .stat-card {
+        padding: 1rem;
+    }
+    
+    .stat-icon i {
+        font-size: 1.5rem;
+    }
+    
+    .stat-value {
+        font-size: 1.25rem;
+    }
+    
+    .quick-actions-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 576px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .dashboard-title {
+        font-size: 1.25rem;
+    }
+}

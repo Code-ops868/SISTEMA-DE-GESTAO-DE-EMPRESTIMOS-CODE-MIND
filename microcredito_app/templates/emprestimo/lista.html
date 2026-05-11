@@ -1,0 +1,145 @@
+{% extends "modelo.html" %}
+{% load static %}
+
+{% block title %}Empréstimos - CODE-MIND{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'datatables/css/dataTables.bootstrap5.min.css' %}">
+<link rel="stylesheet" href="{% static 'css/emprestimos.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="emprestimos-container">
+    <div class="emprestimos-header">
+        <div>
+            <h1 class="emprestimos-title">Gestão de Empréstimos</h1>
+            <p class="emprestimos-subtitle">Controle todos os empréstimos, simule e gerencie parcelas</p>
+        </div>
+        <a href="{% url 'emprestimo_cadastrar' %}" class="btn-primary">
+            <i class="bi bi-plus-circle-fill"></i>
+            <span>Novo Empréstimo</span>
+        </a>
+    </div>
+    
+    <div class="filtros-card">
+        <form method="get" class="filtros-form">
+            <div class="filtros-row">
+                <div class="filtro-group">
+                    <label for="status">Status</label>
+                    <select name="status" id="status" class="form-control">
+                        <option value="">Todos</option>
+                        <option value="ativo">Ativo</option>
+                        <option value="pago">Pago</option>
+                        <option value="atrasado">Atrasado</option>
+                    </select>
+                </div>
+                <div class="filtro-group">
+                    <label for="cliente">Cliente</label>
+                    <select name="cliente" id="cliente" class="form-control">
+                        <option value="">Todos</option>
+                        {% for cliente in clientes %}
+                        <option value="{{ cliente.id }}">{{ cliente.nome }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="filtro-group">
+                    <label for="data_inicio">Data Início</label>
+                    <input type="date" name="data_inicio" id="data_inicio" class="form-control">
+                </div>
+                <div class="filtro-group">
+                    <label for="data_fim">Data Fim</label>
+                    <input type="date" name="data_fim" id="data_fim" class="form-control">
+                </div>
+                <div class="filtro-actions">
+                    <button type="submit" class="btn-primary btn-sm"><i class="bi bi-search"></i> Filtrar</button>
+                    <a href="{% url 'emprestimo' %}" class="btn-secondary btn-sm"><i class="bi bi-arrow-repeat"></i> Limpar</a>
+                </div>
+            </div>
+        </form>
+    </div>
+    
+    <div class="emprestimos-table-card">
+        <div class="table-responsive">
+            <table class="data-table" id="emprestimos-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Cliente</th>
+                        <th>Valor</th>
+                        <th>Juros</th>
+                        <th>Parcelas</th>
+                        <th>Valor Parcela</th>
+                        <th>Status</th>
+                        <th>Data</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for emp in emprestimos %}
+                    <tr class="{% if emp.status == 'atrasado' %}table-danger{% endif %}">
+                        <td>{{ emp.id }}</td>
+                        <td><strong>{{ emp.cliente.nome }}</strong></td>
+                        <td>MT {{ emp.valor|floatformat:2 }}</td>
+                        <td>{{ emp.taxa_juros }}%</td>
+                        <td class="text-center">{{ emp.quantidade_parcelas }}x</td>
+                        <td class="text-success fw-bold">MT {{ emp.valor_parcela|floatformat:2 }}</td>
+                        <td>
+                            <span class="badge {% if emp.status == 'ativo' %}bg-success{% elif emp.status == 'atrasado' %}bg-danger{% else %}bg-secondary{% endif %}">
+                                {{ emp.get_status_display }}
+                            </span>
+                        </td>
+                        <td>{{ emp.data_contrato|date:"d/m/Y" }}</td>
+                        <td class="actions text-center">
+                           
+                            <button class="btn btn-sm btn-outline-success" onclick="baixarEmprestimo({{ emp.id }})" title="Baixar Empréstimo">
+                                <i class="bi bi-cash-stack"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" class="empty-state text-center py-5">
+                            <i class="bi bi-calculator fs-1"></i>
+                            <p>Nenhum empréstimo cadastrado</p>
+                            <a href="{% url 'emprestimo_cadastrar' %}" class="btn btn-primary">Cadastrar primeiro empréstimo</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- SCRIPTS LOCAIS (SEM CDN) -->
+<script src="{% static 'javascript/jquery-3.7.0.min.js' %}"></script>
+<script src="{% static 'datatables/js/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'datatables/js/dataTables.bootstrap5.min.js' %}"></script>
+
+<script>
+// Aguardar o DOM carregar completamente
+document.addEventListener('DOMContentLoaded', function() {
+    // Verificar se jQuery está disponível
+    if (typeof jQuery !== 'undefined' && jQuery.fn && jQuery.fn.DataTable) {
+        jQuery('#emprestimos-table').DataTable({
+            language: {
+                // Usando arquivo LOCAL - SEM CDN
+                url: "{% static 'datatables/i18n/pt-BR.json' %}"
+            },
+            pageLength: 10,
+            responsive: true,
+            order: [[0, 'desc']]
+        });
+        console.log('✅ DataTables inicializado com sucesso');
+    } else {
+        console.error('❌ jQuery ou DataTables não carregado');
+    }
+});
+
+function baixarEmprestimo(id) {
+    if (confirm('Deseja marcar este empréstimo como pago? Todas as parcelas serão quitadas.')) {
+        window.location.href = `/emprestimos/baixar/${id}/`;
+    }
+}
+</script>
+{% endblock %}

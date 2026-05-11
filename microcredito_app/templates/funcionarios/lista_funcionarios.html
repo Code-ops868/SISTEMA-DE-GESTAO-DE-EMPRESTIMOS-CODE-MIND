@@ -1,0 +1,57 @@
+{% extends "modelo.html" %}
+{% load static %}
+
+{% block title %}Funcionários - CODE-MIND{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="card bg-dark">
+        <div class="card-header border-secondary d-flex justify-content-between align-items-center">
+            <h3 class="text-light"><i class="bi bi-people"></i> Funcionários da Empresa</h3>
+            <a href="{% url 'gerenciar_funcionarios' %}" class="btn btn-success btn-sm">
+                <i class="bi bi-person-plus"></i> Novo Funcionário
+            </a>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-dark table-hover">
+                    <thead>
+                        <tr>
+                            <th>Funcionário</th>
+                            <th>Email</th>
+                            <th>Cargo</th>
+                            <th>Permissões</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for f in funcionarios %}
+                        <tr>
+                            <td>{{ f.usuario.get_full_name|default:f.usuario.username }}</td>
+                            <td>{{ f.usuario.email }}</td>
+                            <td>{{ f.get_cargo_display }}</td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    {% if f.pode_baixar_emprestimos %}
+                                    <span class="badge bg-info" title="Pode baixar empréstimos">📉 Baixar</span>
+                                    {% endif %}
+                                    {% if f.pode_regularizar_parcelas %}
+                                    <span class="badge bg-warning" title="Pode regularizar parcelas">💰 Regularizar</span>
+                                    {% endif %}
+                                    {% if f.pode_configurar_empresa %}
+                                    <span class="badge bg-danger" title="Pode configurar empresa">⚙️ Configurar</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center">Nenhum funcionário cadastrado</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

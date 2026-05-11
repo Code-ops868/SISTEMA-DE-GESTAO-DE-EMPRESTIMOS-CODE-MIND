@@ -1,0 +1,60 @@
+<!-- planos/pagamento_mpesa.html -->
+{% extends 'modelo.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <!-- Título com gradiente azul escuro consistente com o sistema -->
+                    <div class="text-white text-center p-3 rounded mb-4" style="background: linear-gradient(135deg, #0a0e14 0%, #0d1117 100%) !important;">
+                        <h4 class="mb-0 fw-bold">
+                            <i class="fas fa-credit-card me-2"></i>
+                            Pagamento - {{ plano.get_nome_display }}
+                        </h4>
+                    </div>
+                    
+                    <!-- Valor em negrito -->
+                    <div class="text-center mb-4">
+                        <div class="fw-bold mb-3" style="font-size: 2.5rem; color: #28a745;">
+                            {{ plano.valor }} MT
+                        </div>
+                        <!-- Duração com cor visível (cinza claro em vez de text-muted) -->
+                        <p style="color: #adb5bd;">
+                            <i class="fas fa-calendar-alt me-1"></i>
+                            Duração: {{ plano.duracao_dias }} dias
+                        </p>
+                    </div>
+                    
+                    <!-- Formulário de pagamento -->
+                    <form method="POST">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success btn-lg w-100 py-3 fw-bold">
+                            <i class="fas fa-mobile-alt me-2"></i>
+                            Pagar {{ plano.valor }} MT com Emola
+                        </button>
+                    </form>
+                    
+                    <!-- Link voltar em verde -->
+                    <div class="mt-4 text-center">
+                        <a href="{% url 'planos' %}" class="text-success text-decoration-none fw-bold">
+                            <i class="fas fa-arrow-left me-1"></i>
+                            Voltar aos planos
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Informação adicional com cor visível -->
+            <div class="text-center mt-3">
+                <small style="color: #6c757d;">
+                    <i class="fas fa-lock me-1"></i>
+                    Pagamento seguro via PaySuite
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

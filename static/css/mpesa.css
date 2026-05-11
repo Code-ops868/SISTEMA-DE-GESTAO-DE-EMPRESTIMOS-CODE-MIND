@@ -1,0 +1,221 @@
+/* ============================================ */
+/* M-PESA - ESTILOS ESPECÍFICOS */
+/* REGRA 3: AZUL ESCURO + VERDE */
+/* ============================================ */
+
+.pagamento-container {
+    max-width: 500px;
+    margin: 2rem auto;
+    padding: 1rem;
+}
+
+.pagamento-card {
+    background: linear-gradient(135deg, rgba(13, 17, 23, 0.9), rgba(10, 12, 16, 0.95));
+    border: 1px solid rgba(56, 139, 253, 0.2);
+    border-radius: 20px;
+    padding: 2rem;
+}
+
+.pagamento-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.pagamento-header i {
+    font-size: 3rem;
+    color: #88ff66;
+}
+
+.pagamento-header h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #e6edf3;
+    margin-top: 1rem;
+}
+
+.pagamento-header p {
+    color: rgba(230, 237, 243, 0.6);
+}
+
+.plano-info {
+    background: rgba(136, 255, 102, 0.1);
+    border: 1px solid #88ff66;
+    border-radius: 12px;
+    padding: 1rem;
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.plano-info h3 {
+    color: #88ff66;
+    margin-bottom: 0.5rem;
+}
+
+.plano-valor .valor {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #88ff66;
+}
+
+.plano-valor .periodo {
+    color: rgba(230, 237, 243, 0.6);
+}
+
+/* Formulário */
+.form-group {
+    margin-bottom: 1.25rem;
+}
+
+.form-group label {
+    display: block;
+    color: #e6edf3;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.form-group label i {
+    color: #88ff66;
+    margin-right: 0.5rem;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.75rem;
+    background: rgba(13, 17, 23, 0.8);
+    border: 1px solid rgba(56, 139, 253, 0.3);
+    border-radius: 10px;
+    color: #e6edf3;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #88ff66;
+    box-shadow: 0 0 0 3px rgba(136, 255, 102, 0.2);
+}
+
+.form-hint {
+    display: block;
+    font-size: 0.7rem;
+    color: rgba(230, 237, 243, 0.5);
+    margin-top: 0.25rem;
+}
+
+/* M-PESA Steps */
+.mpesa-info {
+    background: rgba(136, 255, 102, 0.05);
+    border-radius: 12px;
+    padding: 1rem;
+    margin: 1.5rem 0;
+}
+
+.mpesa-step {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0;
+}
+
+.step-number {
+    width: 28px;
+    height: 28px;
+    background: #88ff66;
+    color: #0a0c10;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 0.8rem;
+}
+
+.step-text {
+    color: #e6edf3;
+    font-size: 0.85rem;
+}
+
+/* Botões */
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.btn-secondary {
+    flex: 1;
+    background: transparent;
+    border: 1px solid #88ff66;
+    padding: 0.75rem;
+    border-radius: 10px;
+    color: #88ff66;
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+    background: rgba(136, 255, 102, 0.1);
+    transform: translateY(-2px);
+}
+
+.btn-mpesa {
+    flex: 1;
+    background: linear-gradient(135deg, #4CAF50, #2E7D32);
+    color: white;
+    padding: 0.75rem;
+    border-radius: 10px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-mpesa:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+}
+
+.btn-mpesa i {
+    font-size: 1.1rem;
+}
+
+.pagamento-info {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(56, 139, 253, 0.2);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    color: rgba(230, 237, 243, 0.6);
+}
+
+.pagamento-info i {
+    color: #88ff66;
+}
+
+/* Responsividade */
+@media (max-width: 576px) {
+    .pagamento-container {
+        padding: 0.5rem;
+    }
+    
+    .pagamento-card {
+        padding: 1.5rem;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .plano-valor .valor {
+        font-size: 1.5rem;
+    }
+}

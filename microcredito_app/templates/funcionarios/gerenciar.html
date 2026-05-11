@@ -1,0 +1,153 @@
+{% extends "modelo.html" %}
+{% load static %}
+
+{% block title %}Gerenciar Funcionários - CODE-MIND{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="card bg-dark">
+        <div class="card-header border-secondary">
+            <h3 class="text-light">
+                <i class="bi bi-people"></i> Gerenciar Funcionários
+            </h3>
+            <p class="text-light-50 mb-0">Adicione e gerencie os funcionários da sua empresa</p>
+        </div>
+        <div class="card-body">
+            
+            <!-- Formulário para adicionar novo funcionário -->
+            <div class="card bg-secondary bg-opacity-25 mb-4">
+                <div class="card-header border-secondary">
+                    <h5 class="text-light"><i class="bi bi-person-plus"></i> Adicionar Novo Funcionário</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label text-light">Usuário</label>
+                                <input type="text" name="username" class="form-control bg-dark text-light" required>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label text-light">Email</label>
+                                <input type="email" name="email" class="form-control bg-dark text-light" required>
+                            </div>
+                            <div class="col-md-2 mb-3">
+                                <label class="form-label text-light">Senha</label>
+                                <input type="password" name="password" class="form-control bg-dark text-light" required>
+                            </div>
+                            <div class="col-md-2 mb-3">
+                                <label class="form-label text-light">Cargo</label>
+                                <select name="cargo" class="form-control bg-dark text-light">
+                                    <option value="gerente">Gerente</option>
+                                    <option value="caixa">Caixa</option>
+                                    <option value="atendente">Atendente</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2 mb-3 d-flex align-items-end">
+                                <button type="submit" class="btn btn-success w-100">
+                                    <i class="bi bi-check-circle"></i> Adicionar
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="row mt-2">
+                            <div class="col-md-3">
+                                <label class="text-light-50">
+                                    <input type="checkbox" name="pode_baixar"> Pode baixar empréstimos
+                                </label>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="text-light-50">
+                                    <input type="checkbox" name="pode_regularizar"> Pode regularizar parcelas
+                                </label>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="text-light-50">
+                                    <input type="checkbox" name="pode_configurar"> Pode configurar empresa
+                                </label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Tabela de funcionários existentes -->
+            <div class="table-responsive">
+                <h5 class="text-light mb-3"><i class="bi bi-list-check"></i> Funcionários Cadastrados</h5>
+                <table class="table table-dark table-hover">
+                    <thead>
+                        <tr>
+                            <th>Usuário</th>
+                            <th>Email</th>
+                            <th>Cargo</th>
+                            <th>Baixar Empréstimos</th>
+                            <th>Regularizar Parcelas</th>
+                            <th>Configurar Empresa</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for f in funcionarios %}
+                        <tr>
+                            <td>{{ f.usuario.username }}</td>
+                            <td>{{ f.usuario.email }}</td>
+                            <td>
+                                <span class="badge {% if f.cargo == 'admin_empresa' %}bg-danger{% elif f.cargo == 'gerente' %}bg-warning{% else %}bg-secondary{% endif %}">
+                                    {{ f.get_cargo_display }}
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                {% if f.pode_baixar_emprestimos %}
+                                    <i class="bi bi-check-circle text-success fs-5"></i>
+                                {% else %}
+                                    <i class="bi bi-x-circle text-danger fs-5"></i>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if f.pode_regularizar_parcelas %}
+                                    <i class="bi bi-check-circle text-success fs-5"></i>
+                                {% else %}
+                                    <i class="bi bi-x-circle text-danger fs-5"></i>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if f.pode_configurar_empresa %}
+                                    <i class="bi bi-check-circle text-success fs-5"></i>
+                                {% else %}
+                                    <i class="bi bi-x-circle text-danger fs-5"></i>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if f.ativo %}
+                                    <span class="badge bg-success">Ativo</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Inativo</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center text-light-50 py-4">
+                                <i class="bi bi-people fs-1"></i>
+                                <p>Nenhum funcionário cadastrado ainda</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Botão voltar -->
+            <div class="mt-4">
+                <a href="{% url 'dashboard' %}" class="btn btn-outline-light">
+                    <i class="bi bi-arrow-left"></i> Voltar ao Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

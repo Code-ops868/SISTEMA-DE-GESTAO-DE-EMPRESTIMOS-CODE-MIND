@@ -1,0 +1,75 @@
+{% extends "modelo.html" %}
+{% load static %}
+
+{% block title %}Termos e Condições - CODE-MIND{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="card bg-dark">
+        <div class="card-header border-secondary">
+            <h1 class="text-light">📜 Termos e Condições de Uso</h1>
+            <p class="text-light-50">Última atualização: {% now "d/m/Y" %}</p>
+        </div>
+        <div class="card-body">
+            
+            <h3 class="text-warning">1. Aceitação dos Termos</h3>
+            <p class="text-light-50">Ao acessar e usar a plataforma CODE-MIND, você concorda com estes Termos e Condições. Se não concordar, por favor, não utilize nossos serviços.</p>
+            
+            <h3 class="text-warning mt-4">2. Descrição do Serviço</h3>
+            <p class="text-light-50">A CODE-MIND é uma plataforma de gestão de microcrédito que permite:</p>
+            <ul class="text-light-50">
+                <li>Cadastro e gestão de clientes</li>
+                <li>Simulação e contratação de empréstimos</li>
+                <li>Controle de parcelas e pagamentos</li>
+                <li>Geração de relatórios financeiros</li>
+                <li>Gestão de funcionários e permissões</li>
+            </ul>
+            
+            <h3 class="text-warning mt-4">3. Cadastro e Conta</h3>
+            <p class="text-light-50">Para utilizar nossos serviços, você deve:</p>
+            <ul class="text-light-50">
+                <li>Fornecer informações verdadeiras e atualizadas</li>
+                <li>Manter a confidencialidade da sua senha</li>
+                <li>Notificar imediatamente qualquer uso não autorizado</li>
+                <li>Ser maior de 18 anos</li>
+            </ul>
+            
+            <h3 class="text-warning mt-4">4. Responsabilidades do Usuário</h3>
+            <p class="text-light-50">O usuário se compromete a:</p>
+            <ul class="text-light-50">
+                <li>Não utilizar o sistema para atividades ilegais</li>
+                <li>Não tentar acessar dados de outros usuários</li>
+                <li>Não interferir no funcionamento da plataforma</li>
+                <li>Utilizar o sistema apenas para fins legítimos de gestão de microcrédito</li>
+            </ul>
+            
+            <h3 class="text-warning mt-4">5. Pagamentos e Planos</h3>
+            <p class="text-light-50">A CODE-MIND oferece planos de assinatura. O não pagamento pode resultar na suspensão ou cancelamento da conta.</p>
+            
+            <h3 class="text-warning mt-4">6. Cancelamento e Suspensão</h3>
+            <p class="text-light-50">Reservamo-nos o direito de suspender ou cancelar contas que violem estes termos, sem aviso prévio.</p>
+            
+            <h3 class="text-warning mt-4">7. Limitação de Responsabilidade</h3>
+            <p class="text-light-50">A CODE-MIND não se responsabiliza por perdas ou danos decorrentes do uso da plataforma, incluindo perda de dados ou lucros.</p>
+            
+            <h3 class="text-warning mt-4">8. Modificações nos Termos</h3>
+            <p class="text-light-50">Podemos atualizar estes termos a qualquer momento. As alterações entram em vigor imediatamente após a publicação.</p>
+            
+            <h3 class="text-warning mt-4">9. Legislação Aplicável</h3>
+            <p class="text-light-50">Estes termos são regidos pelas leis da República de Moçambique.</p>
+            
+            <h3 class="text-warning mt-4">10. Contato</h3>
+            <p class="text-light-50">Em caso de dúvidas, entre em contato pelo email: <strong>suporte@codemind.co.mz</strong></p>
+            
+            <hr class="border-secondary my-4">
+            
+            <p class="text-center text-light-50">Ao continuar usando a plataforma, você confirma que leu e concorda com estes termos.</p>
+            
+            <div class="text-center mt-4">
+                <a href="{% url 'inicio' %}" class="btn btn-success">Voltar ao Início</a>
+            </div>
+            
+        </div>
+    </div>
+</div>
+{% endblock %}

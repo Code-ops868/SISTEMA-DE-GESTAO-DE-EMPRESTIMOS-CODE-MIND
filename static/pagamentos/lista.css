@@ -1,0 +1,172 @@
+/* ============================================ */
+/* PAGAMENTOS - ESTILOS */
+/* REGRA 3: AZUL ESCURO + VERDE */
+/* ============================================ */
+
+.pagamentos-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 1rem;
+}
+
+.pagamentos-header {
+    margin-bottom: 2rem;
+}
+
+.pagamentos-title {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: #e6edf3;
+    margin-bottom: 0.25rem;
+}
+
+.pagamentos-subtitle {
+    color: rgba(230, 237, 243, 0.6);
+    font-size: 0.9rem;
+}
+
+/* Stats Cards */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: linear-gradient(135deg, rgba(13, 17, 23, 0.8), rgba(10, 12, 16, 0.9));
+    border: 1px solid rgba(56, 139, 253, 0.2);
+    border-radius: 16px;
+    padding: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(136, 255, 102, 0.4);
+}
+
+.stat-icon i {
+    font-size: 2rem;
+    color: #88ff66;
+}
+
+.stat-info {
+    flex: 1;
+}
+
+.stat-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: rgba(230, 237, 243, 0.5);
+    margin-bottom: 0.25rem;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #88ff66;
+    margin: 0;
+}
+
+/* Tabs */
+.nav-tabs {
+    border-bottom: 1px solid rgba(56, 139, 253, 0.2);
+}
+
+.nav-tabs .nav-link {
+    color: rgba(230, 237, 243, 0.7);
+    background: transparent;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.nav-tabs .nav-link:hover {
+    color: #88ff66;
+}
+
+.nav-tabs .nav-link.active {
+    color: #88ff66;
+    border-bottom: 2px solid #88ff66;
+}
+
+/* Tables */
+.table-card {
+    background: linear-gradient(135deg, rgba(13, 17, 23, 0.8), rgba(10, 12, 16, 0.9));
+    border: 1px solid rgba(56, 139, 253, 0.2);
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.table-header {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid rgba(56, 139, 253, 0.2);
+}
+
+.table-header h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #e6edf3;
+    margin: 0;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.data-table th {
+    text-align: left;
+    padding: 1rem;
+    color: #88ff66;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    border-bottom: 1px solid rgba(56, 139, 253, 0.2);
+}
+
+.data-table td {
+    padding: 1rem;
+    color: #e6edf3;
+    font-size: 0.875rem;
+    border-bottom: 1px solid rgba(56, 139, 253, 0.1);
+}
+
+.data-table tbody tr:hover {
+    background: rgba(56, 139, 253, 0.05);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem !important;
+    color: rgba(230, 237, 243, 0.5);
+}
+
+.empty-state i {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .nav-tabs .nav-link {
+        padding: 0.5rem 1rem;
+        font-size: 0.8rem;
+    }
+    
+    .data-table th,
+    .data-table td {
+        padding: 0.75rem;
+        font-size: 0.75rem;
+    }
+}

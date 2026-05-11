@@ -1,0 +1,87 @@
+{% extends "modelo.html" %}
+{% load static %}
+
+{% block title %}Regularizar Parcela - CODE-MIND{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card bg-dark">
+                <div class="card-header border-secondary">
+                    <h3 class="text-warning"><i class="bi bi-exclamation-triangle"></i> Regularizar Parcela</h3>
+                </div>
+                <div class="card-body">
+                    <!-- INFORMAÇÕES DA PARCELA ATRASADA -->
+                    <div class="mb-4">
+                        <div class="row mb-3">
+                            <div class="col-5 text-light-50">Cliente</div>
+                            <div class="col-7 text-light fw-semibold">{{ parcela.emprestimo.cliente.nome }}</div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-5 text-light-50">Empréstimo</div>
+                            <div class="col-7 text-light fw-semibold">#{{ parcela.emprestimo.id }}</div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-5 text-light-50">Parcela</div>
+                            <div class="col-7 text-light fw-semibold">{{ parcela.numero }}/{{ parcela.emprestimo.quantidade_parcelas }}</div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-5 text-light-50">Dias em Atraso</div>
+                            <div class="col-7 text-danger fw-semibold">{{ dias_atraso }} dias</div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-5 text-light-50">Multa (2%)</div>
+                            <div class="col-7 text-danger">MT {{ multa|floatformat:2 }}</div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-5 text-light-50">Juros</div>
+                            <div class="col-7 text-danger">MT {{ juros|floatformat:2 }}</div>
+                        </div>
+                        <div class="row pt-2 mt-2 border-top border-secondary">
+                            <div class="col-5 text-light-50">Total a Pagar</div>
+                            <div class="col-7 text-warning fw-bold fs-5">MT {{ valor_total|floatformat:2 }}</div>
+                        </div>
+                    </div>
+                    
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label class="form-label text-light">Forma de Pagamento</label>
+                            <select name="forma_pagamento" class="form-select bg-dark text-light" required>
+                                <option value="">Selecione...</option>
+                                <option value="dinheiro">💵 Dinheiro</option>
+                                <option value="pix">📱 E-MOLA</option>
+                                <option value="pix">📱 M-PESA</option>
+                                <option value="transferencia">🏦 Transferência Bancária</option>
+                                <option value="cartao">💳 Cartão de Crédito/Débito</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label text-light">Comprovante (opcional)</label>
+                            <input type="file" name="comprovante" class="form-control bg-dark text-light" accept="image/*,.pdf">
+                            <small class="text-light-50">Aceita JPG, PNG ou PDF (max 5MB)</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label text-light">Observações</label>
+                            <textarea name="observacoes" class="form-control bg-dark text-light" rows="2"></textarea>
+                        </div>
+                        
+                        <div class="d-flex gap-2 mt-4">
+                            <button type="submit" class="btn btn-warning flex-grow-1">
+                                <i class="bi bi-check-circle"></i> Confirmar Pagamento
+                            </button>
+                            <a href="{% url 'pagamentos' %}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Voltar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

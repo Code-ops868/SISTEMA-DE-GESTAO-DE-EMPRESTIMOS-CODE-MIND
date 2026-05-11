@@ -1,0 +1,83 @@
+{% extends "core/dashboard_base.html" %}
+{% load static %}
+
+{% block title %}{% if cliente %}Editar{% else %}Novo{% endif %} Cliente - CODEMIND{% endblock %}
+
+{% block page_css %}
+<link rel="stylesheet" href="{% static 'css/clientes.css' %}">
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="cliente-form-container">
+    <div class="cliente-form-card">
+        <div class="form-header">
+            <i class="bi bi-person-badge"></i>
+            <h2>{% if cliente %}Editar Cliente{% else %}Novo Cliente{% endif %}</h2>
+            <p>{% if cliente %}Altere os dados do cliente{% else %}Preencha os dados para cadastrar um novo cliente{% endif %}</p>
+        </div>
+
+        <form method="post" action="{% if cliente %}{% url 'cliente_editar' cliente.id %}{% else %}{% url 'cliente_cadastrar' %}{% endif %}">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="nome">
+                    <i class="bi bi-person"></i> Nome Completo
+                </label>
+                <input type="text" id="nome" name="nome" value="{{ cliente.nome|default:'' }}" placeholder="Digite o nome completo" required>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="email">
+                        <i class="bi bi-envelope"></i> E-mail
+                    </label>
+                    <input type="email" id="email" name="email" value="{{ cliente.email|default:'' }}" placeholder="cliente@email.com">
+                    <small class="form-hint">Opcional, mas recomendado</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="telefone">
+                        <i class="bi bi-whatsapp"></i> Telefone/WhatsApp
+                    </label>
+                    <input type="tel" id="telefone" name="telefone" value="{{ cliente.telefone|default:'' }}" placeholder="84 1234567" required>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="renda_mensal">
+                        <i class="bi bi-cash-stack"></i> Renda Mensal (MT)
+                    </label>
+                    <input type="text" id="renda_mensal" name="renda_mensal" value="{% if cliente.renda_mensal %}{{ cliente.renda_mensal|floatformat:2 }}{% endif %}" placeholder="0,00">
+                    <small class="form-hint">Usado para análise de crédito</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="data_nascimento">
+                        <i class="bi bi-calendar"></i> Data de Cadastro
+                    </label>
+                    <input type="date" id="data_nascimento" name="data_nascimento" value="{{ cliente.data_nascimento|date:'Y-m-d'|default:'' }}">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="endereco">
+                    <i class="bi bi-geo-alt"></i> Endereço
+                </label>
+                <textarea id="endereco" name="endereco" rows="2" placeholder="Endereço completo">{{ cliente.endereco|default:'' }}</textarea>
+            </div>
+            
+            <div class="form-actions">
+                <a href="{% url 'clientes' %}" class="btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Cancelar
+                </a>
+                <button type="submit" class="btn-primary">
+                    <i class="bi bi-check-circle"></i> {% if cliente %}Salvar Alterações{% else %}Cadastrar Cliente{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="{% static 'javascript/clientes.js' %}"></script>
+{% endblock %}

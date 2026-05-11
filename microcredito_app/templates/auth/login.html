@@ -1,0 +1,56 @@
+{% extends "modelo.html" %}
+{% load static %}
+
+{% block title %}Login - CODE-MIND{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/login.css' %}">
+<script src="{% static 'javascript/login.js' %}" defer></script>
+{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <div class="login-card">
+        <div class="login-header">
+            <i class="bi bi-box-arrow-in-right"></i>
+            <h2>Bem-vindo de volta!</h2>
+            <p>Acesse sua conta para continuar</p>
+        </div>
+
+        <form method="post" action="{% url 'login' %}" autocomplete="off">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="email">
+                    <i class="bi bi-envelope"></i> E-mail
+                </label>
+                <input type="email" id="email" name="email" placeholder="seu@email.com" required autofocus>
+            </div>
+            
+            <div class="form-group">
+                <label for="senha">
+                    <i class="bi bi-lock"></i> Senha
+                </label>
+                <input type="password" id="senha" name="senha" placeholder="••••••••" required>
+            </div>
+            
+            <div class="form-options">
+                <label class="checkbox">
+                    <input type="checkbox" name="lembrar">
+                    <span>Lembrar-me</span>
+                </label>
+                <a href="{% url 'password_reset' %}" class="text-success" style="text-decoration: none;">Esqueci minha senha?</a>
+            </div>
+            
+            <button type="submit" class="btn-login">
+                <i class="bi bi-box-arrow-in-right"></i> Entrar
+            </button>
+            
+        </form>
+        
+        <div class="login-footer">
+            <p>Não tem uma conta? <a href="{% url 'cadastro' %}">Cadastre-se gratuitamente</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}

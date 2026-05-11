@@ -1,0 +1,78 @@
+{% extends "base/modelo.html" %}
+{% load static %}
+
+{% block title %}Status do Pagamento - CODE-MIND{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/planos.css' %}">
+<link rel="stylesheet" href="{% static 'css/mpesa.css' %}">
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/mpesa.js' %}" defer></script>
+{% endblock %}
+
+{% block content %}
+<div class="status-container">
+    <div class="status-card {% if transacao.status == 'sucesso' %}success{% elif transacao.status == 'falhou' %}failed{% else %}processing{% endif %}">
+        <div class="status-icon">
+            {% if transacao.status == 'sucesso' %}
+                <i class="bi bi-check-circle-fill"></i>
+            {% elif transacao.status == 'falhou' %}
+                <i class="bi bi-x-circle-fill"></i>
+            {% else %}
+                <i class="bi bi-hourglass-split"></i>
+            {% endif %}
+        </div>
+        
+        <h2>
+            {% if transacao.status == 'sucesso' %}
+                Pagamento Confirmado!
+            {% elif transacao.status == 'falhou' %}
+                Pagamento Falhou
+            {% else %}
+                Pagamento em Processamento
+            {% endif %}
+        </h2>
+        
+        <div class="status-info">
+            <div class="info-row">
+                <span>Referência:</span>
+                <strong>{{ transacao.referencia }}</strong>
+            </div>
+            <div class="info-row">
+                <span>Valor:</span>
+                <strong>{{ transacao.valor|floatformat:0 }} MT</strong>
+            </div>
+            <div class="info-row">
+                <span>Telefone:</span>
+                <strong>{{ transacao.telefone }}</strong>
+            </div>
+            <div class="info-row">
+                <span>Status:</span>
+                <strong class="status-badge">{{ transacao.get_status_display }}</strong>
+            </div>
+        </div>
+        
+        <div class="status-actions">
+            {% if transacao.status == 'sucesso' %}
+                <a href="{% url 'dashboard' %}" class="btn-primary">Ir para Dashboard</a>
+            {% elif transacao.status == 'falhou' %}
+                <a href="{% url 'planos' %}" class="btn-primary">Tentar Novamente</a>
+            {% else %}
+                <a href="{% url 'pagamento_mpesa_status' transacao.id %}" class="btn-primary">
+                    <i class="bi bi-arrow-repeat"></i> Verificar Status
+                </a>
+            {% endif %}
+            <a href="{% url 'planos' %}" class="btn-secondary">Voltar para Planos</a>
+        </div>
+        
+        {% if transacao.status == 'processando' %}
+        <div class="auto-refresh">
+            <i class="bi bi-info-circle"></i>
+            <span>Aguardando confirmação do pagamento. Esta página será atualizada automaticamente.</span>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

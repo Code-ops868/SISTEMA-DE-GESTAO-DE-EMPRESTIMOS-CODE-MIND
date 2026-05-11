@@ -1,0 +1,40 @@
+/* ============================================ */
+/* NOTIFICAÇÕES - ESTILOS ESPECÍFICOS */
+/* REGRA 3: AZUL ESCURO + VERDE */
+/* ============================================ */
+
+.notificacao-item {
+    transition: background-color 0.2s ease;
+}
+
+.notificacao-item:hover {
+    background-color: rgba(56, 139, 253, 0.1);
+}
+
+.notificacao-item.nao-lida {
+    background-color: rgba(136, 255, 102, 0.05);
+    border-left: 3px solid #88ff66;
+}
+
+.notificacao-mensagem {
+    font-size: 0.8rem;
+    line-height: 1.4;
+    color: #e6edf3;
+}
+
+.notificacao-data {
+    font-size: 0.65rem;
+}
+
+.notificacao-marcar-lida {
+    opacity: 0.5;
+    transition: opacity 0.2s ease;
+}
+
+.notificacao-marcar-lida:hover {
+    opacity: 1;
+}
+
+.bg-dark-hover {
+    background-color: rgba(56, 139, 253, 0.05);
+}

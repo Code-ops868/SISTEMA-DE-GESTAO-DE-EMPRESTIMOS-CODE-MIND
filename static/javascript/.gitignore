@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg-info/
+dist/
+build/
+
+# Django
+*.log
+*.pot
+local_settings.py
+staticfiles/
+mediafiles/
+
+# ============================================
+# ARQUIVOS DE CREDENCIAIS (NUNCA COMMITAR!)
+# ============================================
+.env
+.env.txt
+PROJECTO/.env
+*.env
+
+# Ambiente virtual
+venv/
+env/
+.venv/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Sistema
+.DS_Store
+Thumbs.db

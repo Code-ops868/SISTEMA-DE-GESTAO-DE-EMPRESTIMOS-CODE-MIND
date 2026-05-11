@@ -1,0 +1,92 @@
+{% extends "modelo.html" %}
+{% load static %}
+
+{% block title %}Política de Privacidade - CODE-MIND{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="card bg-dark">
+        <div class="card-header border-secondary">
+            <h1 class="text-light">🔒 Política de Privacidade</h1>
+            <p class="text-light-50">Última atualização: {% now "d/m/Y" %}</p>
+        </div>
+        <div class="card-body">
+            
+            <p class="text-light-50">Na CODE-MIND, levamos a sua privacidade a sério. Esta política explica como coletamos, usamos e protegemos suas informações.</p>
+            
+            <h3 class="text-warning mt-4">1. Informações que Coletamos</h3>
+            <ul class="text-light-50">
+                <li><strong>Dados de cadastro:</strong> Nome, email, telefone, endereço</li>
+                <li><strong>Dados da empresa:</strong> Nome da empresa, logo, dados fiscais</li>
+                <li><strong>Dados de clientes:</strong> Informações dos seus clientes (nome, telefone, renda)</li>
+                <li><strong>Dados financeiros:</strong> Empréstimos, parcelas, pagamentos</li>
+                <li><strong>Dados de acesso:</strong> IP, logs, dispositivo usado</li>
+            </ul>
+            
+            <h3 class="text-warning mt-4">2. Como Usamos suas Informações</h3>
+            <ul class="text-light-50">
+                <li>Para fornecer e manter nossos serviços</li>
+                <li>Para processar empréstimos e pagamentos</li>
+                <li>Para enviar notificações sobre vencimentos e atrasos</li>
+                <li>Para melhorar nossa plataforma</li>
+                <li>Para cumprir obrigações legais</li>
+            </ul>
+            
+            <h3 class="text-warning mt-4">3. Compartilhamento de Dados</h3>
+            <p class="text-light-50">Não vendemos ou alugamos seus dados pessoais. Podemos compartilhar dados:</p>
+            <ul class="text-light-50">
+                <li>Com provedores de serviços (hospedagem, email, SMS)</li>
+                <li>Por exigência legal (ordem judicial)</li>
+                <li>Com seu consentimento explícito</li>
+            </ul>
+            
+            <h3 class="text-warning mt-4">4. Segurança dos Dados</h3>
+            <p class="text-light-50">Implementamos medidas de segurança para proteger seus dados contra acesso não autorizado, alteração ou destruição. Isso inclui:</p>
+            <ul class="text-light-50">
+                <li>Criptografia de dados sensíveis</li>
+                <li>Controle de acesso baseado em permissões</li>
+                <li>Backups regulares</li>
+                <li>Monitoramento de atividades suspeitas</li>
+            </ul>
+            
+            <h3 class="text-warning mt-4">5. Retenção de Dados</h3>
+            <p class="text-light-50">Mantemos seus dados enquanto sua conta estiver ativa ou conforme necessário para cumprir obrigações legais. Você pode solicitar a exclusão dos seus dados a qualquer momento.</p>
+            
+            <h3 class="text-warning mt-4">6. Cookies</h3>
+            <p class="text-light-50">Utilizamos cookies para melhorar sua experiência, autenticar sessões e analisar o uso da plataforma. Você pode desativar cookies nas configurações do navegador.</p>
+            
+            <h3 class="text-warning mt-4">7. Direitos do Usuário</h3>
+            <p class="text-light-50">Você tem direito a:</p>
+            <ul class="text-light-50">
+                <li>Acessar seus dados pessoais</li>
+                <li>Corrigir dados incorretos</li>
+                <li>Solicitar exclusão de dados</li>
+                <li>Revogar consentimento a qualquer momento</li>
+                <li>Exportar seus dados</li>
+            </ul>
+            
+            <h3 class="text-warning mt-4">8. Dados de Terceiros (Seus Clientes)</h3>
+            <p class="text-light-50">Você é responsável por obter o consentimento dos seus clientes para o tratamento de dados pela CODE-MIND.</p>
+            
+            <h3 class="text-warning mt-4">9. Privacidade de Menores</h3>
+            <p class="text-light-50">Não coletamos intencionalmente dados de menores de 18 anos. Se você é responsável por um menor, certifique-se de ter autorização.</p>
+            
+            <h3 class="text-warning mt-4">10. Contato</h3>
+            <p class="text-light-50">Para questões sobre privacidade, entre em contato:</p>
+            <ul class="text-light-50">
+                <li>Email: <strong>linhacodemind@proton.me</strong></li>
+                <li>WhatsApp: <strong>+258 876587356</strong></li>
+            </ul>
+            
+            <hr class="border-secondary my-4">
+            
+            <p class="text-center text-light-50">Ao utilizar a plataforma, você concorda com esta Política de Privacidade.</p>
+            
+            <div class="text-center mt-4">
+                <a href="{% url 'inicio' %}" class="btn btn-success">Voltar ao Início</a>
+            </div>
+            
+        </div>
+    </div>
+</div>
+{% endblock %}
