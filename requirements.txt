@@ -16,3 +16,4 @@ pywebpush==1.14.1
 fcm-django==3.1.0
 firebase-admin==6.5.0
 dnspython==2.6.1
+gunicorn==23.0.0
