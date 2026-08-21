@@ -17,3 +17,4 @@ fcm-django==3.1.0
 firebase-admin==6.5.0
 dnspython==2.6.1
 gunicorn==23.0.0
+python-dotenv==1.0.1
