@@ -54,36 +54,41 @@ class MPESAService:
             return {'error': str(e)}
     #================================================================================================
     def stk_push(self, telefone, valor, referencia):
-            from django.conf import settings
-            
-            # Payload SEM telefone (cliente insere no checkout)
-            payload = {
-                'amount': float(valor),
-                'method': 'emola',
-                'reference': referencia,
-                'description': f'Pagamento assinatura - {referencia}',
-                'callback_url': settings.PAYSUITE_CALLBACK_URL,
-                'return_url': settings.PAYSUITE_RETURN_URL,
-            }
-            
-            # SEM 'beneficiary', SEM 'customer', SEM 'contact', SEM 'phone'
-            
-            print(f"📤 Payload (sem telefone): {json.dumps(payload, indent=2)}")
-            
+        from django.conf import settings
+
+        payload = {
+            'amount': float(valor),
+            'method': 'emola',
+            'reference': referencia,
+            'description': f'Pagamento assinatura - {referencia}',
+            'callback_url': settings.PAYSUITE_CALLBACK_URL,
+            'return_url': settings.PAYSUITE_RETURN_URL,
+        }
+
+        print(f"📤 Payload (sem telefone): {json.dumps(payload, indent=2)}")
+
+        try:
             response = requests.post(
                 f"{self.base_url}/payments",
                 headers=self.headers,
                 json=payload,
                 timeout=30
             )
-            
-            if response.status_code in [200, 201]:
-                data = response.json().get('data', {})
-                return {
-                    'CheckoutRequestID': data.get('id'),
-                    'MerchantRequestID': referencia,
-                    'ResponseCode': '0',
-                    'ResponseDescription': 'Success',
-                    'checkout_url': data.get('checkout_url')  # ← Cliente será redirecionado aqui
-                }
-            # ... resto do código
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Erro de rede ao chamar PaySuite: {e}")
+            return {'error': f'Erro de conexao com PaySuite: {e}'}
+
+        if response.status_code in [200, 201]:
+            data = response.json().get('data', {})
+            return {
+                'CheckoutRequestID': data.get('id'),
+                'MerchantRequestID': referencia,
+                'ResponseCode': '0',
+                'ResponseDescription': 'Success',
+                'checkout_url': data.get('checkout_url')
+            }
+        else:
+            # Aqui e onde o teu erro real esta a acontecer -- vamos ve-lo
+            logger.error(f"PaySuite recusou o pagamento. Status: {response.status_code}, Resposta: {response.text}")
+            print(f"❌ PaySuite ERROR {response.status_code}: {response.text}")
+            return {'error': f'PaySuite retornou {response.status_code}: {response.text}'}
