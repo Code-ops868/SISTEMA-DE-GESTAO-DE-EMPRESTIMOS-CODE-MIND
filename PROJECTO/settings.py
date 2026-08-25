@@ -275,4 +275,11 @@ PAYSUITE_RETURN_URL = config('PAYSUITE_RETURN_URL', default='')
 PAYSUITE_TIMEOUT = config('PAYSUITE_TIMEOUT', default=30, cast=int)
 PAYSUITE_MAX_RETRIES = config('PAYSUITE_MAX_RETRIES', default=3, cast=int)
 
+# ============================================
+# NETSHOP — gateway de pagamentos (substitui PaySuite)
+# ============================================
+NETSHOP_API_KEY = config('NETSHOP_API_KEY', default='')
+NETSHOP_WALLET_ID = config('NETSHOP_WALLET_ID', default='')
+NETSHOP_WEBHOOK_SECRET = config('NETSHOP_WEBHOOK_SECRET', default='')
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

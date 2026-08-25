@@ -31,7 +31,7 @@ from .models import (
     Empresa, PushSubscription, EmailVerificacao,
     ConfiguracaoNotificacao, Funcionario,
 )
-from .mpesa_service import MPESAService
+from .mpesa_service import NetShopService
 from .forms import CadastroForm, LoginForm
 
 logger = logging.getLogger('django')
@@ -391,7 +391,7 @@ def pagamento_plano(request, plano_nome):
 
     return redirect('pagamento_mpesa', plano_nome=plano_nome)
 
-
+#=================================================================
 @login_required
 def pagamento_mpesa(request, plano_nome):
     try:
@@ -404,6 +404,13 @@ def pagamento_mpesa(request, plano_nome):
         return render(request, 'planos/pagamento_mpesa.html', {'plano': plano})
 
     if request.method == 'POST':
+        metodo = request.POST.get('metodo_pagamento', 'emola')
+        telefone = request.POST.get('telefone', '').strip()
+
+        if metodo in ('mpesa', 'emola', 'mkesh') and not telefone:
+            messages.error(request, 'Informe o numero de telefone para pagamentos via M-Pesa/e-Mola.')
+            return render(request, 'planos/pagamento_mpesa.html', {'plano': plano})
+
         nome_limpo = re.sub(r'[^A-Za-z]', '', plano.nome.upper())
         referencia = f"PLANO{nome_limpo}{uuid.uuid4().hex[:12].upper()}"
 
@@ -411,15 +418,15 @@ def pagamento_mpesa(request, plano_nome):
             usuario=request.user,
             plano=plano,
             valor=plano.valor,
-            telefone='',
+            telefone=telefone,
             referencia=referencia,
             status='pendente',
             checkout_request_id=None,
             merchant_request_id=None,
         )
 
-        mpesa = MPESAService()
-        response = mpesa.stk_push('', float(plano.valor), referencia)
+        netshop = NetShopService()
+        response = netshop.criar_cobranca(telefone, float(plano.valor), referencia, metodo=metodo)
 
         if response.get('error'):
             transacao.status = 'falhou'
@@ -428,8 +435,8 @@ def pagamento_mpesa(request, plano_nome):
             messages.error(request, f'Erro ao iniciar pagamento: {response.get("error")}')
             return render(request, 'planos/pagamento_mpesa.html', {'plano': plano})
 
-        transacao.checkout_request_id = response.get('CheckoutRequestID')
-        transacao.merchant_request_id = response.get('MerchantRequestID')
+        transacao.checkout_request_id = response.get('id')
+        transacao.merchant_request_id = referencia
         transacao.status = 'processando'
         transacao.save()
 
@@ -437,12 +444,12 @@ def pagamento_mpesa(request, plano_nome):
         if checkout_url:
             return redirect(checkout_url)
         else:
-            messages.info(request, 'Pagamento iniciado. Complete no ambiente seguro do PaySuite.')
+            messages.info(request, 'Pagamento iniciado. Confirme no seu telemovel.')
             return redirect('pagamento_mpesa_status', transacao_id=transacao.id)
 
     return JsonResponse({'error': 'Metodo nao permitido'}, status=405)
 
-
+#=================================================================================================
 @login_required
 def pagamento_mpesa_status(request, transacao_id):
     """Verificar status do pagamento"""
@@ -457,22 +464,30 @@ def pagamento_mpesa_status(request, transacao_id):
         return redirect('planos')
 
     if transacao.checkout_request_id:
-        mpesa = MPESAService()
-        status_response = mpesa.verificar_status(transacao.checkout_request_id)
+        netshop = NetShopService()
+        status_response = netshop.verificar_status(transacao.checkout_request_id)
 
-        if status_response.get('ResultCode') == '0':
+        status_atual = status_response.get('status')
+
+        if status_atual == 'paid':
             transacao.status = 'sucesso'
-            transacao.resultado = json.dumps(status_response)
+            transacao.resultado = json.dumps(status_response.get('raw', {}))
             transacao.save()
             ativar_assinatura(request.user, transacao.plano)
             messages.success(request, 'Pagamento confirmado! Sua assinatura foi ativada.')
             return redirect('dashboard')
-        elif status_response.get('ResultCode') == '1037':
+        elif status_atual == 'failed':
+            transacao.status = 'falhou'
+            transacao.resultado = json.dumps(status_response.get('raw', {}))
+            transacao.save()
+            messages.error(request, 'Pagamento falhou. Tente novamente.')
+            return redirect('planos')
+        elif status_atual == 'pending':
             messages.info(request, 'Pagamento ainda em processamento. Aguarde a confirmacao.')
 
     return render(request, 'planos/status_mpesa.html', {'transacao': transacao})
 
-
+#=========================================================================================
 @csrf_exempt
 def mpesa_callback(request):
     """
