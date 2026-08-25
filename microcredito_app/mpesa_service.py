@@ -1,4 +1,4 @@
-from .mpesa_service import NetShopService
+
 import requests
 import json
 import uuid
