@@ -8,36 +8,57 @@
         <div class="col-md-6">
             <div class="card shadow-sm">
                 <div class="card-body">
-                    <!-- Título com gradiente azul escuro consistente com o sistema -->
+                    <!-- Titulo com gradiente azul escuro consistente com o sistema -->
                     <div class="text-white text-center p-3 rounded mb-4" style="background: linear-gradient(135deg, #0a0e14 0%, #0d1117 100%) !important;">
                         <h4 class="mb-0 fw-bold">
                             <i class="fas fa-credit-card me-2"></i>
                             Pagamento - {{ plano.get_nome_display }}
                         </h4>
                     </div>
-                    
+
                     <!-- Valor em negrito -->
                     <div class="text-center mb-4">
                         <div class="fw-bold mb-3" style="font-size: 2.5rem; color: #28a745;">
                             {{ plano.valor }} MT
                         </div>
-                        <!-- Duração com cor visível (cinza claro em vez de text-muted) -->
                         <p style="color: #adb5bd;">
                             <i class="fas fa-calendar-alt me-1"></i>
-                            Duração: {{ plano.duracao_dias }} dias
+                            Duracao: {{ plano.duracao_dias }} dias
                         </p>
                     </div>
-                    
-                    <!-- Formulário de pagamento -->
-                    <form method="POST">
+
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <!-- Formulario de pagamento -->
+                    <form method="POST" id="form-pagamento">
                         {% csrf_token %}
-                        <button type="submit" class="btn btn-success btn-lg w-100 py-3 fw-bold">
+
+                        <div class="mb-3">
+                            <label for="metodo_pagamento" class="form-label fw-bold">Metodo de pagamento</label>
+                            <select name="metodo_pagamento" id="metodo_pagamento" class="form-select" required>
+                                <option value="emola">📱 e-Mola</option>
+                                <option value="mpesa">📱 M-Pesa</option>
+                                <option value="card">💳 Cartao (Visa/Mastercard)</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3" id="campo_telefone">
+                            <label for="telefone" class="form-label fw-bold">Numero de telefone</label>
+                            <input type="text" name="telefone" id="telefone" class="form-control"
+                                   placeholder="84xxxxxxx" required>
+                            <small class="text-muted">Numero associado a sua conta M-Pesa/e-Mola</small>
+                        </div>
+
+                        <button type="submit" class="btn btn-success btn-lg w-100 py-3 fw-bold" id="btn-pagar">
                             <i class="fas fa-mobile-alt me-2"></i>
-                            Pagar {{ plano.valor }} MT com Emola
+                            <span id="texto-botao">Pagar {{ plano.valor }} MT com e-Mola</span>
                         </button>
                     </form>
-                    
-                    <!-- Link voltar em verde -->
+
                     <div class="mt-4 text-center">
                         <a href="{% url 'planos' %}" class="text-success text-decoration-none fw-bold">
                             <i class="fas fa-arrow-left me-1"></i>
@@ -46,15 +67,45 @@
                     </div>
                 </div>
             </div>
-            
-            <!-- Informação adicional com cor visível -->
+
             <div class="text-center mt-3">
                 <small style="color: #6c757d;">
                     <i class="fas fa-lock me-1"></i>
-                    Pagamento seguro via PaySuite
+                    Pagamento seguro via NetShop
                 </small>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const metodo = document.getElementById('metodo_pagamento');
+    const campoTelefone = document.getElementById('campo_telefone');
+    const telefone = document.getElementById('telefone');
+    const textoBotao = document.getElementById('texto-botao');
+    const valorPlano = '{{ plano.valor }}';
+
+    const nomesMetodo = {
+        'emola': 'e-Mola',
+        'mpesa': 'M-Pesa',
+        'card': 'Cartao'
+    };
+
+    function atualizarFormulario() {
+        const valor = metodo.value;
+        if (valor === 'card') {
+            campoTelefone.style.display = 'none';
+            telefone.required = false;
+        } else {
+            campoTelefone.style.display = 'block';
+            telefone.required = true;
+        }
+        textoBotao.textContent = 'Pagar ' + valorPlano + ' MT com ' + nomesMetodo[valor];
+    }
+
+    metodo.addEventListener('change', atualizarFormulario);
+    atualizarFormulario();
+});
+</script>
 {% endblock %}
