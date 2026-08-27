@@ -16,7 +16,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
-from django.db.models import Sum, Count
+from django.db.models import Sum, Count, Q
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
@@ -32,11 +32,11 @@ from .models import (
     ConfiguracaoNotificacao, Funcionario,
 )
 from .mpesa_service import NetShopService
-from .forms import CadastroForm, LoginForm
+from .forms import CadastroForm, LoginForm, ClienteForm
 
 logger = logging.getLogger('django')
 
-# Dominios de e-mail temporario/descartavel bloqueados no cadastro
+# Domínios de e-mail temporário/descartável bloqueados no cadastro
 DOMINIOS_EMAIL_BLOQUEADOS = [
     'temp-mail.com', 'mailinator.com', 'guerrillamail.com',
     '10minutemail.com', 'throwawaymail.com', 'yopmail.com',
@@ -46,9 +46,145 @@ DOMINIOS_EMAIL_BLOQUEADOS = [
     'tempmail.com', 'mohmal.com', 'dispostable.com',
 ]
 
+
 # ============================================
-# PAGINAS PUBLICAS
+# FUNÇÕES DE VALIDAÇÃO DE DOCUMENTOS MOÇAMBICANOS
 # ============================================
+
+def validar_nuit(nuit):
+    """
+    Valida NUIT (Número Único de Identificação Tributária)
+    - Deve ter 9 dígitos numéricos
+    """
+    if not nuit:
+        return True, None
+    
+    nuit = str(nuit).strip()
+    if not re.match(r'^[0-9]{9}$', nuit):
+        return False, 'NUIT deve ter exatamente 9 dígitos numéricos.'
+    
+    return True, None
+
+
+def validar_nuib(nuib):
+    """
+    Valida NUIB (Número Único de Identificação do Bilhete)
+    - Deve ter 9 dígitos numéricos
+    """
+    if not nuib:
+        return True, None
+    
+    nuib = str(nuib).strip()
+    if not re.match(r'^[0-9]{9}$', nuib):
+        return False, 'NUIB deve ter exatamente 9 dígitos numéricos.'
+    
+    return True, None
+
+
+def validar_bi_passaporte(bi_passaporte):
+    """
+    Valida BI (Bilhete de Identidade) ou Passaporte conforme legislação moçambicana
+    
+    Formatos válidos:
+    - BI: Uma letra maiúscula seguida de 6 dígitos (ex: A123456)
+    - Passaporte: Uma letra maiúscula seguida de 7 dígitos (ex: P1234567)
+    - DIRE: 8 dígitos numéricos (ex: 12345678)
+    """
+    if not bi_passaporte:
+        return True, None, None
+    
+    bi_passaporte = str(bi_passaporte).strip().upper()
+    
+    bi_pattern = r'^[A-Z][0-9]{6}$'
+    passaporte_pattern = r'^[A-Z][0-9]{7}$'
+    dire_pattern = r'^[0-9]{8}$'
+    
+    if re.match(bi_pattern, bi_passaporte):
+        return True, None, 'BI'
+    elif re.match(passaporte_pattern, bi_passaporte):
+        return True, None, 'Passaporte'
+    elif re.match(dire_pattern, bi_passaporte):
+        return True, None, 'DIRE'
+    else:
+        return False, 'Formato inválido. Use BI (A123456), Passaporte (P1234567) ou DIRE (12345678).', None
+
+
+def validar_documentos_cliente(data):
+    """
+    Valida todos os documentos do cliente
+    Retorna (is_valid, errors_dict)
+    """
+    errors = {}
+    is_valid = True
+    
+    nuit_valid, nuit_error = validar_nuit(data.get('nuit'))
+    if not nuit_valid:
+        errors['nuit'] = nuit_error
+        is_valid = False
+    
+    nuib_valid, nuib_error = validar_nuib(data.get('nuib'))
+    if not nuib_valid:
+        errors['nuib'] = nuib_error
+        is_valid = False
+    
+    bi_valid, bi_error, bi_tipo = validar_bi_passaporte(data.get('bi_passaporte'))
+    if not bi_valid:
+        errors['bi_passaporte'] = bi_error
+        is_valid = False
+    
+    data_emissao = data.get('data_emissao_documento')
+    data_validade = data.get('data_validade_documento')
+    
+    if data_emissao and data_validade:
+        try:
+            if isinstance(data_emissao, str):
+                emissao = datetime.strptime(data_emissao, '%Y-%m-%d').date()
+            else:
+                emissao = data_emissao
+                
+            if isinstance(data_validade, str):
+                validade = datetime.strptime(data_validade, '%Y-%m-%d').date()
+            else:
+                validade = data_validade
+            
+            if emissao > validade:
+                errors['data_validade_documento'] = 'A data de validade deve ser posterior à data de emissão.'
+                is_valid = False
+            
+            if validade < date.today():
+                errors['data_validade_documento'] = 'O documento está vencido. Por favor, atualize os dados.'
+                is_valid = False
+                
+        except (ValueError, TypeError):
+            errors['data_emissao_documento'] = 'Data inválida.'
+            is_valid = False
+    
+    return is_valid, errors
+
+
+def verificar_documento_unico(model, campo, valor, usuario, excluir_id=None):
+    """
+    Verifica se um documento já está cadastrado para outro cliente
+    Retorna (is_unique, error_message)
+    """
+    if not valor:
+        return True, None
+    
+    queryset = model.objects.filter(**{campo: valor}, usuario=usuario)
+    if excluir_id:
+        queryset = queryset.exclude(id=excluir_id)
+    
+    if queryset.exists():
+        nome_campo = dict(model._meta.fields)[campo].verbose_name
+        return False, f'{nome_campo} "{valor}" já está cadastrado para outro cliente.'
+    
+    return True, None
+
+
+# ============================================
+# PÁGINAS PÚBLICAS
+# ============================================
+
 def inicio(request):
     return render(request, 'inicio.html')
 
@@ -64,9 +200,6 @@ def login_view(request):
             senha = form.cleaned_data['senha']
             lembrar = form.cleaned_data['lembrar']
 
-            # Mensagem generica: mensagens diferentes para "email nao
-            # existe" e "senha errada" permitem enumerar quais e-mails
-            # estao cadastrados na base.
             erro_generico = 'E-mail ou senha incorretos.'
 
             try:
@@ -119,40 +252,40 @@ def cadastro_view(request):
         termos = request.POST.get('termos')
 
         if not email:
-            messages.error(request, 'E-mail e obrigatorio.')
+            messages.error(request, 'E-mail é obrigatório.')
             return render(request, 'auth/cadastro.html')
 
         email_regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
         if not re.match(email_regex, email):
-            messages.error(request, 'Digite um e-mail valido (exemplo: nome@dominio.com)')
+            messages.error(request, 'Digite um e-mail válido (exemplo: nome@dominio.com)')
             return render(request, 'auth/cadastro.html')
 
         dominio = email.split('@')[1].lower()
         if dominio in DOMINIOS_EMAIL_BLOQUEADOS:
-            messages.error(request, 'Nao e permitido usar e-mails temporarios ou descartaveis.')
+            messages.error(request, 'Não é permitido usar e-mails temporários ou descartáveis.')
             return render(request, 'auth/cadastro.html')
 
         try:
             dns.resolver.resolve(dominio, 'MX')
         except (dns.resolver.NXDOMAIN, dns.resolver.NoAnswer, dns.resolver.NoNameservers) as e:
-            logger.warning("Dominio de e-mail sem MX valido no cadastro: %s (%s)", dominio, e)
+            logger.warning("Domínio de e-mail sem MX válido no cadastro: %s (%s)", dominio, e)
         except dns.exception.Timeout:
-            logger.warning("Timeout ao validar MX do dominio: %s", dominio)
+            logger.warning("Timeout ao validar MX do domínio: %s", dominio)
 
         if not termos:
-            messages.error(request, 'Voce deve aceitar os termos de uso.')
+            messages.error(request, 'Você deve aceitar os termos de uso.')
             return render(request, 'auth/cadastro.html')
 
         if not first_name or not last_name:
-            messages.error(request, 'Nome e sobrenome sao obrigatorios.')
+            messages.error(request, 'Nome e sobrenome são obrigatórios.')
             return render(request, 'auth/cadastro.html')
 
         if not telefone:
-            messages.error(request, 'Telefone e obrigatorio.')
+            messages.error(request, 'Telefone é obrigatório.')
             return render(request, 'auth/cadastro.html')
 
         if senha1 != senha2:
-            messages.error(request, 'As senhas nao conferem.')
+            messages.error(request, 'As senhas não conferem.')
             return render(request, 'auth/cadastro.html')
 
         try:
@@ -163,7 +296,7 @@ def cadastro_view(request):
             return render(request, 'auth/cadastro.html')
 
         if User.objects.filter(email=email).exists():
-            messages.error(request, 'Este e-mail ja esta cadastrado.')
+            messages.error(request, 'Este e-mail já está cadastrado.')
             return render(request, 'auth/cadastro.html')
 
         username_base = email.split('@')[0]
@@ -201,12 +334,12 @@ def cadastro_view(request):
                 send_mail(
                     subject='Confirme seu cadastro - CODE-MIND',
                     message=(
-                        f'Ola {first_name}!\n\n'
+                        f'Olá {first_name}!\n\n'
                         f'Obrigado por se cadastrar na CODE-MIND.\n\n'
-                        f'Para ativar sua conta e comecar a usar o sistema, clique no link abaixo:\n\n'
+                        f'Para ativar sua conta e começar a usar o sistema, clique no link abaixo:\n\n'
                         f'{link}\n\n'
-                        f'Este link e valido por 24 horas.\n\n'
-                        f'Se voce nao solicitou este cadastro, ignore este email.\n\n'
+                        f'Este link é válido por 24 horas.\n\n'
+                        f'Se você não solicitou este cadastro, ignore este email.\n\n'
                         f'Atenciosamente,\nEquipe CODE-MIND'
                     ),
                     from_email=settings.DEFAULT_FROM_EMAIL,
@@ -215,14 +348,14 @@ def cadastro_view(request):
                 )
                 messages.success(
                     request,
-                    f'Cadastro realizado, {first_name}! Enviamos um link de confirmacao '
+                    f'Cadastro realizado, {first_name}! Enviamos um link de confirmação '
                     f'para seu email. Verifique sua caixa de entrada.'
                 )
             except Exception as e:
-                logger.error("Erro ao enviar email de confirmacao para %s: %s", email, e)
+                logger.error("Erro ao enviar email de confirmação para %s: %s", email, e)
                 messages.warning(
                     request,
-                    'Cadastro realizado, mas houve erro ao enviar email de confirmacao. '
+                    'Cadastro realizado, mas houve erro ao enviar email de confirmação. '
                     'Entre em contato com o suporte.'
                 )
 
@@ -237,16 +370,16 @@ def cadastro_view(request):
 
 
 def confirmar_email_view(request, codigo):
-    """Confirma o email do usuario e ativa a conta"""
+    """Confirma o email do usuário e ativa a conta"""
     try:
         verificacao = EmailVerificacao.objects.get(codigo=codigo)
 
         if verificacao.verificado_em:
-            messages.warning(request, 'Este email ja foi verificado. Faca login.')
+            messages.warning(request, 'Este email já foi verificado. Faça login.')
             return redirect('login')
 
         if timezone.now() > verificacao.expira_em:
-            messages.error(request, 'Este link de confirmacao expirou. Solicite um novo.')
+            messages.error(request, 'Este link de confirmação expirou. Solicite um novo.')
             return redirect('login')
 
         user = verificacao.usuario
@@ -256,11 +389,11 @@ def confirmar_email_view(request, codigo):
         verificacao.verificado_em = timezone.now()
         verificacao.save()
 
-        messages.success(request, 'Email confirmado! Agora voce pode fazer login.')
+        messages.success(request, 'Email confirmado! Agora você pode fazer login.')
         return redirect('login')
 
     except EmailVerificacao.DoesNotExist:
-        messages.error(request, 'Link de confirmacao invalido.')
+        messages.error(request, 'Link de confirmação inválido.')
         return redirect('login')
 
 
@@ -273,8 +406,9 @@ def logout_view(request):
 # ============================================
 # DECORATOR PARA VERIFICAR ASSINATURA
 # ============================================
+
 def verificar_assinatura(view_func):
-    """Decorator para verificar se o usuario tem assinatura ativa (admin tem acesso total)"""
+    """Decorator para verificar se o usuário tem assinatura ativa"""
     def wrapper(request, *args, **kwargs):
         if not request.user.is_authenticated:
             return redirect('login')
@@ -296,8 +430,9 @@ def verificar_assinatura(view_func):
 
 
 # ============================================
-# PAGINAS PROTEGIDAS (requerem assinatura ativa)
+# DASHBOARD
 # ============================================
+
 @login_required
 @verificar_assinatura
 def dashboard(request):
@@ -361,6 +496,7 @@ def dashboard(request):
 # ============================================
 # PLANOS E ASSINATURAS
 # ============================================
+
 def planos(request):
     planos_lista = Plano.objects.all()
     assinatura = None
@@ -386,18 +522,18 @@ def pagamento_plano(request, plano_nome):
     try:
         Plano.objects.get(nome=plano_nome)
     except Plano.DoesNotExist:
-        messages.error(request, 'Plano nao encontrado.')
+        messages.error(request, 'Plano não encontrado.')
         return redirect('planos')
 
     return redirect('pagamento_mpesa', plano_nome=plano_nome)
 
-#=================================================================
+
 @login_required
 def pagamento_mpesa(request, plano_nome):
     try:
         plano = Plano.objects.get(nome=plano_nome)
     except Plano.DoesNotExist:
-        messages.error(request, 'Plano nao encontrado.')
+        messages.error(request, 'Plano não encontrado.')
         return redirect('planos')
 
     if request.method == 'GET':
@@ -408,7 +544,7 @@ def pagamento_mpesa(request, plano_nome):
         telefone = request.POST.get('telefone', '').strip()
 
         if metodo in ('mpesa', 'emola', 'mkesh') and not telefone:
-            messages.error(request, 'Informe o numero de telefone para pagamentos via M-Pesa/e-Mola.')
+            messages.error(request, 'Informe o número de telefone para pagamentos via M-Pesa/e-Mola.')
             return render(request, 'planos/pagamento_mpesa.html', {'plano': plano})
 
         nome_limpo = re.sub(r'[^A-Za-z]', '', plano.nome.upper())
@@ -444,15 +580,14 @@ def pagamento_mpesa(request, plano_nome):
         if checkout_url:
             return redirect(checkout_url)
         else:
-            messages.info(request, 'Pagamento iniciado. Confirme no seu telemovel.')
+            messages.info(request, 'Pagamento iniciado. Confirme no seu telemóvel.')
             return redirect('pagamento_mpesa_status', transacao_id=transacao.id)
 
-    return JsonResponse({'error': 'Metodo nao permitido'}, status=405)
+    return JsonResponse({'error': 'Método não permitido'}, status=405)
 
-#=================================================================================================
+
 @login_required
 def pagamento_mpesa_status(request, transacao_id):
-    """Verificar status do pagamento"""
     transacao = get_object_or_404(TransacaoMPESA, id=transacao_id, usuario=request.user)
 
     if transacao.status == 'sucesso':
@@ -483,25 +618,13 @@ def pagamento_mpesa_status(request, transacao_id):
             messages.error(request, 'Pagamento falhou. Tente novamente.')
             return redirect('planos')
         elif status_atual == 'pending':
-            messages.info(request, 'Pagamento ainda em processamento. Aguarde a confirmacao.')
+            messages.info(request, 'Pagamento ainda em processamento. Aguarde a confirmação.')
 
     return render(request, 'planos/status_mpesa.html', {'transacao': transacao})
 
-#=========================================================================================
+
 @csrf_exempt
 def mpesa_callback(request):
-    """
-    Webhook para receber callbacks do PaySuite.
-
-    IMPORTANTE: valida a assinatura HMAC do payload contra
-    settings.PAYSUITE_WEBHOOK_SECRET antes de processar qualquer coisa.
-    Sem essa validacao, qualquer pessoa poderia forjar um POST simulando
-    pagamento bem-sucedido e ativar assinaturas de graca.
-
-    Confirme na documentacao do PaySuite qual e o nome exato do header
-    de assinatura e o algoritmo usado (aqui assumimos HMAC-SHA256 num
-    header 'X-PaySuite-Signature' -- ajuste conforme a doc real deles).
-    """
     if request.method != 'POST':
         return JsonResponse({'ResultCode': 1, 'ResultDesc': 'Method not allowed'})
 
@@ -509,7 +632,7 @@ def mpesa_callback(request):
     webhook_secret = getattr(settings, 'PAYSUITE_WEBHOOK_SECRET', '')
 
     if not webhook_secret:
-        logger.error("PAYSUITE_WEBHOOK_SECRET nao configurado -- recusando webhook.")
+        logger.error("PAYSUITE_WEBHOOK_SECRET não configurado -- recusando webhook.")
         return JsonResponse({'ResultCode': 1, 'ResultDesc': 'Server misconfigured'}, status=500)
 
     assinatura_esperada = hmac.new(
@@ -519,7 +642,7 @@ def mpesa_callback(request):
     ).hexdigest()
 
     if not hmac.compare_digest(assinatura_recebida, assinatura_esperada):
-        logger.warning("Webhook PaySuite recebido com assinatura invalida ou ausente.")
+        logger.warning("Webhook PaySuite recebido com assinatura inválida ou ausente.")
         return JsonResponse({'ResultCode': 1, 'ResultDesc': 'Invalid signature'}, status=403)
 
     try:
@@ -562,7 +685,6 @@ def mpesa_callback(request):
 
 
 def ativar_assinatura(usuario, plano):
-    """Ativar assinatura do usuario apos pagamento confirmado"""
     assinatura, created = Assinatura.objects.update_or_create(
         usuario=usuario,
         defaults={
@@ -599,16 +721,8 @@ def confirmar_pagamento(request, pagamento_id):
 
 @login_required
 def simular_callback(request, transacao_id):
-    """
-    Simula um callback de pagamento bem-sucedido -- USO EXCLUSIVO EM DEV.
-
-    Antes: so exigia @login_required, entao qualquer usuario autenticado
-    podia ativar assinatura de graca (e nem filtrava por dono da
-    transacao). Agora: exige is_staff E DEBUG=True, e continua nao
-    exposto em producao de forma alguma.
-    """
     if not (request.user.is_staff and settings.DEBUG):
-        return JsonResponse({'error': 'Nao disponivel.'}, status=404)
+        return JsonResponse({'error': 'Não disponível.'}, status=404)
 
     transacao = get_object_or_404(TransacaoMPESA, id=transacao_id, usuario=request.user)
 
@@ -621,54 +735,165 @@ def simular_callback(request, transacao_id):
 
 
 # ============================================
-# CLIENTES
+# CLIENTES - ATUALIZADO COM DOCUMENTOS
 # ============================================
+
 @login_required
 @verificar_assinatura
 def lista_clientes(request):
+    """Lista de clientes com filtros por documentos"""
     clientes = Cliente.objects.filter(usuario=request.user)
-    return render(request, 'clientes/lista.html', {'clientes': clientes})
+    
+    # Filtro de busca geral
+    search = request.GET.get('search')
+    if search:
+        clientes = clientes.filter(
+            Q(nome__icontains=search) |
+            Q(telefone__icontains=search) |
+            Q(email__icontains=search) |
+            Q(nuit__icontains=search) |
+            Q(nuib__icontains=search) |
+            Q(bi_passaporte__icontains=search)
+        )
+    
+    # Filtro por tipo (empresa/pessoa física)
+    tipo = request.GET.get('tipo')
+    if tipo == 'empresa':
+        clientes = clientes.filter(nuit__isnull=False)
+    elif tipo == 'pessoa_fisica':
+        clientes = clientes.filter(nuit__isnull=True)
+    
+    return render(request, 'clientes/lista.html', {
+        'clientes': clientes,
+        'today': date.today(),
+    })
 
 
 @login_required
 @verificar_assinatura
 def cliente_cadastrar(request):
+    """Cadastrar novo cliente com validação de documentos moçambicanos"""
     if request.method == 'POST':
+        # Capturar dados do formulário
         nome = request.POST.get('nome', '').strip()
         email = request.POST.get('email', '').strip()
         telefone = request.POST.get('telefone', '').strip()
+        
+        # Documentos
+        nuit = request.POST.get('nuit', '').strip() or None
+        nuib = request.POST.get('nuib', '').strip() or None
+        bi_passaporte = request.POST.get('bi_passaporte', '').strip() or None
+        data_emissao_documento = request.POST.get('data_emissao_documento', '') or None
+        data_validade_documento = request.POST.get('data_validade_documento', '') or None
+        
         renda_mensal_raw = request.POST.get('renda_mensal', '').replace('.', '').replace(',', '.')
-        data_nascimento = request.POST.get('data_nascimento', '')
-        endereco = request.POST.get('endereco', '').strip()
-        observacoes = request.POST.get('observacoes', '').strip()
+        data_nascimento = request.POST.get('data_nascimento', '') or None
+        endereco = request.POST.get('endereco', '').strip() or None
+        observacoes = request.POST.get('observacoes', '').strip() or None
 
+        # Validar campos obrigatórios
         if not nome:
-            messages.error(request, 'Nome e obrigatorio.')
-            return render(request, 'clientes/formulario.html')
+            messages.error(request, 'Nome completo é obrigatório.')
+            return render(request, 'clientes/formulario.html', {
+                'nome': nome, 'email': email, 'telefone': telefone,
+                'nuit': nuit, 'nuib': nuib, 'bi_passaporte': bi_passaporte,
+            })
 
         if not telefone:
-            messages.error(request, 'Telefone e obrigatorio.')
-            return render(request, 'clientes/formulario.html')
+            messages.error(request, 'Telefone é obrigatório.')
+            return render(request, 'clientes/formulario.html', {
+                'nome': nome, 'email': email, 'telefone': telefone,
+                'nuit': nuit, 'nuib': nuib, 'bi_passaporte': bi_passaporte,
+            })
 
+        # Validar documentos
+        dados_documentos = {
+            'nuit': nuit,
+            'nuib': nuib,
+            'bi_passaporte': bi_passaporte,
+            'data_emissao_documento': data_emissao_documento,
+            'data_validade_documento': data_validade_documento,
+        }
+        
+        is_valid, doc_errors = validar_documentos_cliente(dados_documentos)
+        
+        if not is_valid:
+            for campo, erro in doc_errors.items():
+                messages.error(request, erro)
+            return render(request, 'clientes/formulario.html', {
+                'nome': nome, 'email': email, 'telefone': telefone,
+                'nuit': nuit, 'nuib': nuib, 'bi_passaporte': bi_passaporte,
+                'data_emissao_documento': data_emissao_documento,
+                'data_validade_documento': data_validade_documento,
+            })
+
+        # Verificar duplicidade de documentos
+        if nuit:
+            is_unique, error = verificar_documento_unico(Cliente, 'nuit', nuit, request.user)
+            if not is_unique:
+                messages.error(request, error)
+                return render(request, 'clientes/formulario.html', {
+                    'nome': nome, 'email': email, 'telefone': telefone,
+                    'nuit': nuit, 'nuib': nuib, 'bi_passaporte': bi_passaporte,
+                })
+        
+        if nuib:
+            is_unique, error = verificar_documento_unico(Cliente, 'nuib', nuib, request.user)
+            if not is_unique:
+                messages.error(request, error)
+                return render(request, 'clientes/formulario.html', {
+                    'nome': nome, 'email': email, 'telefone': telefone,
+                    'nuit': nuit, 'nuib': nuib, 'bi_passaporte': bi_passaporte,
+                })
+        
+        if bi_passaporte:
+            is_unique, error = verificar_documento_unico(Cliente, 'bi_passaporte', bi_passaporte, request.user)
+            if not is_unique:
+                messages.error(request, error)
+                return render(request, 'clientes/formulario.html', {
+                    'nome': nome, 'email': email, 'telefone': telefone,
+                    'nuit': nuit, 'nuib': nuib, 'bi_passaporte': bi_passaporte,
+                })
+
+        # Processar renda mensal
         try:
             renda_mensal = float(renda_mensal_raw) if renda_mensal_raw else None
         except ValueError:
-            messages.error(request, 'Renda mensal invalida.')
-            return render(request, 'clientes/formulario.html')
+            messages.error(request, 'Renda mensal inválida.')
+            return render(request, 'clientes/formulario.html', {
+                'nome': nome, 'email': email, 'telefone': telefone,
+                'nuit': nuit, 'nuib': nuib, 'bi_passaporte': bi_passaporte,
+            })
 
-        Cliente.objects.create(
-            usuario=request.user,
-            nome=nome,
-            email=email if email else None,
-            telefone=telefone,
-            renda_mensal=renda_mensal,
-            data_nascimento=data_nascimento if data_nascimento else None,
-            endereco=endereco if endereco else None,
-            observacoes=observacoes if observacoes else None,
-        )
-
-        messages.success(request, f'Cliente "{nome}" cadastrado com sucesso!')
-        return redirect('clientes')
+        # Criar cliente
+        try:
+            cliente = Cliente.objects.create(
+                usuario=request.user,
+                nome=nome,
+                email=email if email else None,
+                telefone=telefone,
+                nuit=nuit,
+                nuib=nuib,
+                bi_passaporte=bi_passaporte,
+                data_emissao_documento=data_emissao_documento if data_emissao_documento else None,
+                data_validade_documento=data_validade_documento if data_validade_documento else None,
+                renda_mensal=renda_mensal,
+                data_nascimento=data_nascimento if data_nascimento else None,
+                endereco=endereco if endereco else None,
+                observacoes=observacoes if observacoes else None,
+            )
+            
+            messages.success(request, f'Cliente "{nome}" cadastrado com sucesso!')
+            logger.info(f"Cliente criado: {cliente.id} - {cliente.nome} - Documentos: {cliente.get_documentos_info()}")
+            return redirect('clientes')
+            
+        except Exception as e:
+            logger.error(f"Erro ao criar cliente: {e}")
+            messages.error(request, 'Erro ao cadastrar cliente. Tente novamente.')
+            return render(request, 'clientes/formulario.html', {
+                'nome': nome, 'email': email, 'telefone': telefone,
+                'nuit': nuit, 'nuib': nuib, 'bi_passaporte': bi_passaporte,
+            })
 
     return render(request, 'clientes/formulario.html')
 
@@ -676,26 +901,88 @@ def cliente_cadastrar(request):
 @login_required
 @verificar_assinatura
 def cliente_editar(request, id):
+    """Editar cliente com validação de documentos moçambicanos"""
     cliente = get_object_or_404(Cliente, id=id, usuario=request.user)
 
     if request.method == 'POST':
+        # Capturar dados
         cliente.nome = request.POST.get('nome', '').strip()
         cliente.email = request.POST.get('email', '').strip() or None
         cliente.telefone = request.POST.get('telefone', '').strip()
+        
+        # Documentos
+        cliente.nuit = request.POST.get('nuit', '').strip() or None
+        cliente.nuib = request.POST.get('nuib', '').strip() or None
+        cliente.bi_passaporte = request.POST.get('bi_passaporte', '').strip() or None
+        cliente.data_emissao_documento = request.POST.get('data_emissao_documento', '') or None
+        cliente.data_validade_documento = request.POST.get('data_validade_documento', '') or None
+        
         renda_raw = request.POST.get('renda_mensal', '').replace('.', '').replace(',', '.')
-        try:
-            cliente.renda_mensal = float(renda_raw) if renda_raw else None
-        except ValueError:
-            messages.error(request, 'Renda mensal invalida.')
-            return render(request, 'clientes/formulario.html', {'cliente': cliente})
-
         cliente.data_nascimento = request.POST.get('data_nascimento', '') or None
         cliente.endereco = request.POST.get('endereco', '').strip() or None
         cliente.observacoes = request.POST.get('observacoes', '').strip() or None
-        cliente.save()
 
-        messages.success(request, f'Cliente "{cliente.nome}" atualizado com sucesso!')
-        return redirect('clientes')
+        # Validar campos obrigatórios
+        if not cliente.nome:
+            messages.error(request, 'Nome completo é obrigatório.')
+            return render(request, 'clientes/formulario.html', {'cliente': cliente})
+
+        if not cliente.telefone:
+            messages.error(request, 'Telefone é obrigatório.')
+            return render(request, 'clientes/formulario.html', {'cliente': cliente})
+
+        # Validar documentos
+        dados_documentos = {
+            'nuit': cliente.nuit,
+            'nuib': cliente.nuib,
+            'bi_passaporte': cliente.bi_passaporte,
+            'data_emissao_documento': str(cliente.data_emissao_documento) if cliente.data_emissao_documento else None,
+            'data_validade_documento': str(cliente.data_validade_documento) if cliente.data_validade_documento else None,
+        }
+        
+        is_valid, doc_errors = validar_documentos_cliente(dados_documentos)
+        
+        if not is_valid:
+            for campo, erro in doc_errors.items():
+                messages.error(request, erro)
+            return render(request, 'clientes/formulario.html', {'cliente': cliente})
+
+        # Verificar duplicidade de documentos
+        if cliente.nuit:
+            is_unique, error = verificar_documento_unico(Cliente, 'nuit', cliente.nuit, request.user, cliente.id)
+            if not is_unique:
+                messages.error(request, error)
+                return render(request, 'clientes/formulario.html', {'cliente': cliente})
+        
+        if cliente.nuib:
+            is_unique, error = verificar_documento_unico(Cliente, 'nuib', cliente.nuib, request.user, cliente.id)
+            if not is_unique:
+                messages.error(request, error)
+                return render(request, 'clientes/formulario.html', {'cliente': cliente})
+        
+        if cliente.bi_passaporte:
+            is_unique, error = verificar_documento_unico(Cliente, 'bi_passaporte', cliente.bi_passaporte, request.user, cliente.id)
+            if not is_unique:
+                messages.error(request, error)
+                return render(request, 'clientes/formulario.html', {'cliente': cliente})
+
+        # Processar renda
+        try:
+            cliente.renda_mensal = float(renda_raw) if renda_raw else None
+        except ValueError:
+            messages.error(request, 'Renda mensal inválida.')
+            return render(request, 'clientes/formulario.html', {'cliente': cliente})
+
+        # Salvar
+        try:
+            cliente.save()
+            messages.success(request, f'Cliente "{cliente.nome}" atualizado com sucesso!')
+            logger.info(f"Cliente atualizado: {cliente.id} - {cliente.nome}")
+            return redirect('clientes')
+        except Exception as e:
+            logger.error(f"Erro ao atualizar cliente: {e}")
+            messages.error(request, 'Erro ao atualizar cliente. Tente novamente.')
+            return render(request, 'clientes/formulario.html', {'cliente': cliente})
 
     return render(request, 'clientes/formulario.html', {'cliente': cliente})
 
@@ -703,16 +990,98 @@ def cliente_editar(request, id):
 @login_required
 @verificar_assinatura
 def cliente_excluir(request, id):
+    """Excluir cliente com verificação de empréstimos associados"""
     cliente = get_object_or_404(Cliente, id=id, usuario=request.user)
     nome = cliente.nome
-    cliente.delete()
-    messages.success(request, f'Cliente "{nome}" excluido com sucesso!')
+    
+    # Verificar se o cliente tem empréstimos
+    if cliente.emprestimos.exists():
+        messages.warning(
+            request,
+            f'O cliente "{nome}" possui {cliente.emprestimos.count()} empréstimo(s) associado(s). '
+            'Exclua os empréstimos primeiro ou regularize a situação.'
+        )
+        return redirect('clientes')
+    
+    try:
+        cliente.delete()
+        messages.success(request, f'Cliente "{nome}" excluído com sucesso!')
+        logger.info(f"Cliente excluído: {id} - {nome}")
+    except Exception as e:
+        logger.error(f"Erro ao excluir cliente {id}: {e}")
+        messages.error(request, 'Erro ao excluir cliente. Tente novamente.')
+    
     return redirect('clientes')
 
 
 # ============================================
-# EMPRESTIMOS
+# API PARA VALIDAÇÃO DE DOCUMENTOS EM TEMPO REAL
 # ============================================
+
+@login_required
+@require_http_methods(["POST"])
+def validar_documento_api(request):
+    """
+    API para validar documentos em tempo real (AJAX)
+    """
+    try:
+        data = json.loads(request.body)
+        campo = data.get('campo')
+        valor = data.get('valor', '').strip()
+        
+        if not campo or not valor:
+            return JsonResponse({'valid': False, 'error': 'Campo ou valor não informado'})
+        
+        resultado = {'valid': True, 'message': '', 'tipo': None}
+        
+        if campo == 'nuit':
+            valid, error = validar_nuit(valor)
+            resultado['valid'] = valid
+            resultado['message'] = error if not valid else 'NUIT válido'
+            
+            if valid and valor:
+                is_unique, _ = verificar_documento_unico(Cliente, 'nuit', valor, request.user)
+                if not is_unique:
+                    resultado['valid'] = False
+                    resultado['message'] = 'NUIT já cadastrado para outro cliente'
+        
+        elif campo == 'nuib':
+            valid, error = validar_nuib(valor)
+            resultado['valid'] = valid
+            resultado['message'] = error if not valid else 'NUIB válido'
+            
+            if valid and valor:
+                is_unique, _ = verificar_documento_unico(Cliente, 'nuib', valor, request.user)
+                if not is_unique:
+                    resultado['valid'] = False
+                    resultado['message'] = 'NUIB já cadastrado para outro cliente'
+        
+        elif campo == 'bi_passaporte':
+            valid, error, tipo = validar_bi_passaporte(valor)
+            resultado['valid'] = valid
+            resultado['message'] = error if not valid else f'Documento válido: {tipo}'
+            resultado['tipo'] = tipo
+            
+            if valid and valor:
+                is_unique, _ = verificar_documento_unico(Cliente, 'bi_passaporte', valor, request.user)
+                if not is_unique:
+                    resultado['valid'] = False
+                    resultado['message'] = 'BI/Passaporte já cadastrado para outro cliente'
+        
+        else:
+            return JsonResponse({'valid': False, 'error': 'Campo inválido'})
+        
+        return JsonResponse(resultado)
+        
+    except Exception as e:
+        logger.error(f"Erro na API de validação: {e}")
+        return JsonResponse({'valid': False, 'error': 'Erro interno'}, status=500)
+
+
+# ============================================
+# EMPRÉSTIMOS
+# ============================================
+
 @login_required
 @verificar_assinatura
 def lista_emprestimos(request):
@@ -748,7 +1117,7 @@ def emprestimo_cadastrar(request):
         tipo_juros = request.POST.get('tipo_juros')
 
         if not all([cliente_id, valor, taxa_juros, quantidade_parcelas, data_primeiro_vencimento]):
-            messages.error(request, 'Todos os campos sao obrigatorios.')
+            messages.error(request, 'Todos os campos são obrigatórios.')
             clientes = Cliente.objects.filter(usuario=request.user)
             return render(request, 'emprestimo/formulario.html', {'clientes': clientes})
 
@@ -778,7 +1147,7 @@ def emprestimo_cadastrar(request):
 
         gerar_parcelas(emprestimo)
 
-        messages.success(request, f'Emprestimo de {cliente.nome} cadastrado com sucesso!')
+        messages.success(request, f'Empréstimo de {cliente.nome} cadastrado com sucesso!')
         return redirect('emprestimo')
 
     clientes = Cliente.objects.filter(usuario=request.user)
@@ -809,43 +1178,31 @@ def emprestimo_parcelas(request, id):
 @login_required
 @require_http_methods(["POST"])
 def emprestimo_baixar_api(request, id):
-    """
-    API para baixar (marcar como pago) um emprestimo inteiro.
-
-    Correcoes aplicadas:
-    - Removido @csrf_exempt: antes tambem aceitava GET, o que tornava
-      isto uma CSRF pronta para exploracao (uma tag <img src="..."> numa
-      pagina maliciosa bastava para marcar o emprestimo como pago).
-    - So aceita POST agora -- acao que altera estado nunca deve
-      responder a GET.
-    - Removida a checagem de permissao duplicada (existiam dois blocos
-      identicos). Resposta de permissao negada agora e JSON (era um
-      redirect, que nao faz sentido numa API consumida via fetch/AJAX).
-    """
     if hasattr(request.user, 'funcionario'):
         funcionario = request.user.funcionario
         if not funcionario.pode_baixar_emprestimos and funcionario.cargo != 'admin_empresa':
             return JsonResponse(
-                {'success': False, 'error': 'Voce nao tem permissao para baixar emprestimos.'},
+                {'success': False, 'error': 'Você não tem permissão para baixar empréstimos.'},
                 status=403,
             )
 
     emprestimo = get_object_or_404(Emprestimo, id=id, usuario=request.user)
 
     if emprestimo.status == 'pago':
-        return JsonResponse({'success': False, 'error': 'Emprestimo ja esta pago.'})
+        return JsonResponse({'success': False, 'error': 'Empréstimo já está pago.'})
 
     emprestimo.status = 'pago'
     emprestimo.save()
 
     emprestimo.parcelas.update(status='pago', data_pagamento=timezone.now().date())
 
-    return JsonResponse({'success': True, 'message': 'Emprestimo baixado com sucesso!'})
+    return JsonResponse({'success': True, 'message': 'Empréstimo baixado com sucesso!'})
 
 
 # ============================================
 # PAGAMENTOS
 # ============================================
+
 @login_required
 @verificar_assinatura
 def pagamento(request):
@@ -956,20 +1313,11 @@ def pagamento(request):
 @login_required
 @require_http_methods(["POST"])
 def registrar_pagamento(request):
-    """
-    Registrar pagamento via AJAX.
-
-    Correcoes: removido @csrf_exempt (o front deve mandar o token CSRF
-    no header X-CSRFToken em vez de desativar a protecao); adicionado
-    @login_required (antes acessava request.user sem garantir que
-    estava autenticado); resposta de permissao negada trocada de
-    redirect para JsonResponse, ja que e uma API.
-    """
     if hasattr(request.user, 'funcionario'):
         funcionario = request.user.funcionario
         if not funcionario.pode_regularizar_parcelas and funcionario.cargo != 'admin_empresa':
             return JsonResponse(
-                {'success': False, 'error': 'Voce nao tem permissao para regularizar parcelas.'},
+                {'success': False, 'error': 'Você não tem permissão para regularizar parcelas.'},
                 status=403,
             )
 
@@ -985,23 +1333,23 @@ def registrar_pagamento(request):
         )
 
         if not parcela_id:
-            return JsonResponse({'success': False, 'error': 'ID da parcela nao informado'})
+            return JsonResponse({'success': False, 'error': 'ID da parcela não informado'})
 
         if not valor:
-            return JsonResponse({'success': False, 'error': 'Valor nao informado'})
+            return JsonResponse({'success': False, 'error': 'Valor não informado'})
 
         if not forma_pagamento:
-            return JsonResponse({'success': False, 'error': 'Forma de pagamento nao informada'})
+            return JsonResponse({'success': False, 'error': 'Forma de pagamento não informada'})
 
         try:
             valor_float = float(valor)
         except ValueError:
-            return JsonResponse({'success': False, 'error': 'Valor invalido'})
+            return JsonResponse({'success': False, 'error': 'Valor inválido'})
 
         parcela = Parcela.objects.get(id=parcela_id, emprestimo__usuario=request.user)
 
         if parcela.status == 'pago':
-            return JsonResponse({'success': False, 'error': 'Esta parcela ja foi paga'})
+            return JsonResponse({'success': False, 'error': 'Esta parcela já foi paga'})
 
         pagamento = Pagamento.objects.create(
             parcela=parcela,
@@ -1023,7 +1371,7 @@ def registrar_pagamento(request):
         })
 
     except Parcela.DoesNotExist:
-        return JsonResponse({'success': False, 'error': 'Parcela nao encontrada'})
+        return JsonResponse({'success': False, 'error': 'Parcela não encontrada'})
 
     except Exception as e:
         logger.error("Erro inesperado em registrar_pagamento: %s", e)
@@ -1033,7 +1381,6 @@ def registrar_pagamento(request):
 @login_required
 @verificar_assinatura
 def simular_juros(request, parcela_id):
-    """Simular juros de uma parcela atrasada"""
     try:
         parcela = Parcela.objects.get(id=parcela_id, emprestimo__usuario=request.user)
         hoje = date.today()
@@ -1060,15 +1407,16 @@ def simular_juros(request, parcela_id):
             'valor_total': valor_total,
         })
     except Parcela.DoesNotExist:
-        return JsonResponse({'error': 'Parcela nao encontrada'}, status=404)
+        return JsonResponse({'error': 'Parcela não encontrada'}, status=404)
     except Exception as e:
         logger.error("Erro em simular_juros: %s", e)
         return JsonResponse({'error': 'Erro interno.'}, status=500)
 
 
 # ============================================
-# RELATORIOS
+# RELATÓRIOS
 # ============================================
+
 @login_required
 @verificar_assinatura
 def relatorios(request):
@@ -1144,7 +1492,6 @@ def relatorios(request):
 
 @login_required
 def pagar_parcela(request, parcela_id):
-    """Pagina para pagar uma parcela"""
     parcela = get_object_or_404(Parcela, id=parcela_id, emprestimo__usuario=request.user)
 
     if request.method == 'POST':
@@ -1172,7 +1519,6 @@ def pagar_parcela(request, parcela_id):
 
 @login_required
 def regularizar_parcela(request, parcela_id):
-    """Pagina para regularizar uma parcela atrasada"""
     parcela = get_object_or_404(Parcela, id=parcela_id, emprestimo__usuario=request.user)
     hoje = date.today()
     dias_atraso = (hoje - parcela.data_vencimento).days
@@ -1217,11 +1563,11 @@ def regularizar_parcela(request, parcela_id):
 
 
 # ============================================
-# EMPRESA / CONFIGURACOES
+# EMPRESA / CONFIGURAÇÕES
 # ============================================
+
 @login_required
 def empresa_config(request):
-    """Configuracao da empresa"""
     empresa, created = Empresa.objects.get_or_create(
         user=request.user,
         defaults={
@@ -1269,7 +1615,7 @@ def config_notificacoes(request):
             config.atraso_frequencia = int(request.POST.get('atraso_frequencia', 2))
             config.push_dias_antecedencia = int(request.POST.get('push_dias_antecedencia', 3))
         except ValueError:
-            messages.error(request, 'Verifique os valores numericos informados.')
+            messages.error(request, 'Verifique os valores numéricos informados.')
             return render(request, 'empresa/config_notificacoes.html', {'config': config})
 
         config.push_notificacoes_ativas = request.POST.get('push_notificacoes_ativas') == 'on'
@@ -1284,31 +1630,31 @@ def config_notificacoes(request):
             if horario_fim:
                 config.push_horario_fim = datetime.strptime(horario_fim, '%H:%M').time()
         except ValueError:
-            messages.error(request, 'Horario invalido. Use o formato HH:MM.')
+            messages.error(request, 'Horário inválido. Use o formato HH:MM.')
             return render(request, 'empresa/config_notificacoes.html', {'config': config})
 
         config.save()
 
-        messages.success(request, 'Configuracoes de notificacao salvas com sucesso!')
+        messages.success(request, 'Configurações de notificação salvas com sucesso!')
         return redirect('config_notificacoes')
 
     return render(request, 'empresa/config_notificacoes.html', {'config': config})
 
 
 # ============================================
-# NOTIFICACOES PUSH
+# NOTIFICAÇÕES PUSH
 # ============================================
+
 @login_required
 @csrf_exempt
 @require_http_methods(['POST'])
 def inscrever_push(request):
-    """Endpoint para salvar inscricao push do usuario"""
     try:
         data = json.loads(request.body)
         subscription = data.get('subscription')
 
         if not subscription:
-            return JsonResponse({'error': 'Subscription nao fornecida'}, status=400)
+            return JsonResponse({'error': 'Subscription não fornecida'}, status=400)
 
         PushSubscription.objects.filter(usuario=request.user).delete()
 
@@ -1318,7 +1664,7 @@ def inscrever_push(request):
             is_active=True,
         )
 
-        logger.info("Nova inscricao push criada: id=%s user=%s", obj.id, request.user.pk)
+        logger.info("Nova inscrição push criada: id=%s user=%s", obj.id, request.user.pk)
         return JsonResponse({'success': True, 'created': True})
 
     except Exception as e:
@@ -1328,7 +1674,6 @@ def inscrever_push(request):
 
 @login_required
 def verificar_inscricao_push(request):
-    """Verifica se o usuario ja tem uma inscricao push ativa"""
     has_subscription = PushSubscription.objects.filter(
         usuario=request.user,
         is_active=True
@@ -1340,7 +1685,6 @@ def verificar_inscricao_push(request):
 @login_required
 @require_http_methods(['POST'])
 def desinscrever_push(request):
-    """Endpoint para remover inscricao push do usuario"""
     try:
         PushSubscription.objects.filter(usuario=request.user).delete()
         return JsonResponse({'success': True})
@@ -1352,16 +1696,15 @@ def desinscrever_push(request):
 @csrf_exempt
 @require_http_methods(["POST"])
 def register_fcm_device(request):
-    """Registra um dispositivo FCM para o usuario"""
     if not request.user.is_authenticated:
-        return JsonResponse({'error': 'Usuario nao autenticado'}, status=401)
+        return JsonResponse({'error': 'Usuário não autenticado'}, status=401)
 
     try:
         data = json.loads(request.body)
         token = data.get('registration_id')
 
         if not token:
-            return JsonResponse({'error': 'Token nao fornecido'}, status=400)
+            return JsonResponse({'error': 'Token não fornecido'}, status=400)
 
         device, created = FCMDevice.objects.get_or_create(
             registration_id=token,
@@ -1388,19 +1731,19 @@ def register_fcm_device(request):
 
 
 # ============================================
-# GERENCIAMENTO DE FUNCIONARIOS
+# GERENCIAMENTO DE FUNCIONÁRIOS
 # ============================================
+
 @login_required
 def gerenciar_funcionarios(request):
-    """Lista e gerencia funcionarios da empresa"""
     if not hasattr(request.user, 'empresa'):
-        messages.error(request, 'Voce nao possui uma empresa associada.')
+        messages.error(request, 'Você não possui uma empresa associada.')
         return redirect('dashboard')
 
     if hasattr(request.user, 'funcionario'):
         funcionario = request.user.funcionario
         if funcionario.cargo != 'admin_empresa':
-            messages.error(request, 'Apenas administradores podem gerenciar funcionarios.')
+            messages.error(request, 'Apenas administradores podem gerenciar funcionários.')
             return redirect('dashboard')
 
     funcionarios = Funcionario.objects.filter(empresa=request.user.empresa)
@@ -1429,20 +1772,19 @@ def gerenciar_funcionarios(request):
                 pode_configurar_empresa=request.POST.get('pode_configurar') == 'on',
                 ativo=True,
             )
-            messages.success(request, f'Funcionario {username} criado com sucesso!')
+            messages.success(request, f'Funcionário {username} criado com sucesso!')
         return redirect('gerenciar_funcionarios')
 
     return render(request, 'funcionarios/gerenciar.html', {'funcionarios': funcionarios})
 
 
 # ============================================
-# PAGINAS LEGAIS
+# PÁGINAS LEGAIS
 # ============================================
+
 def termos_e_condicoes(request):
-    """Pagina de Termos e Condicoes de Uso"""
     return render(request, 'legal/termos_e_condicoes.html')
 
 
 def politica_privacidade(request):
-    """Pagina de Politica de Privacidade"""
     return render(request, 'legal/politica_privacidade.html')

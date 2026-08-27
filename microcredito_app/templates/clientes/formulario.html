@@ -16,17 +16,127 @@
             <p>{% if cliente %}Altere os dados do cliente{% else %}Preencha os dados para cadastrar um novo cliente{% endif %}</p>
         </div>
 
-        <form method="post" action="{% if cliente %}{% url 'cliente_editar' cliente.id %}{% else %}{% url 'cliente_cadastrar' %}{% endif %}">
+        <form method="post" action="{% if cliente %}{% url 'cliente_editar' cliente.id %}{% else %}{% url 'cliente_cadastrar' %}{% endif %}" id="cliente-form" novalidate>
             {% csrf_token %}
             
+            <!-- Nome Completo -->
             <div class="form-group">
                 <label for="nome">
-                    <i class="bi bi-person"></i> Nome Completo
+                    <i class="bi bi-person"></i> Nome Completo <span class="campo-obrigatorio">*</span>
                 </label>
                 <input type="text" id="nome" name="nome" value="{{ cliente.nome|default:'' }}" placeholder="Digite o nome completo" required>
+                <div class="error-feedback" id="nome-error">
+                    <i class="bi bi-exclamation-circle"></i> Nome completo é obrigatório.
+                </div>
+            </div>
+            
+            <!-- Documentos de Identificação -->
+            <div class="documento-group">
+                <label>
+                    <i class="bi bi-file-earmark-text"></i> Documentos de Identificação
+                </label>
+                <p class="text-muted small">Preencha pelo menos um dos campos abaixo conforme a legislação moçambicana</p>
+                
+                <!-- NUIT -->
+                <div class="form-group">
+                    <label for="nuit">
+                        <i class="bi bi-qr-code"></i> NUIT <span class="badge-doc obrigatorio">Obrigatório para empresas</span>
+                    </label>
+                    <input type="text" id="nuit" name="nuit" value="{{ cliente.nuit|default:'' }}" 
+                           placeholder="Ex: 123456789 (9 dígitos)" 
+                           maxlength="9"
+                           pattern="[0-9]{9}"
+                           autocomplete="off">
+                    <div class="documento-info">
+                        <i class="bi bi-info-circle"></i> Número Único de Identificação Tributária (9 dígitos numéricos)
+                    </div>
+                    <div class="error-feedback" id="nuit-error">
+                        <i class="bi bi-exclamation-circle"></i> NUIT deve ter exatamente 9 dígitos numéricos.
+                    </div>
+                    <div class="valid-feedback" id="nuit-valid">
+                        <i class="bi bi-check-circle"></i> NUIT válido.
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <!-- NUIB -->
+                    <div class="form-group">
+                        <label for="nuib">
+                            <i class="bi bi-card-id"></i> NUIB <span class="badge-doc">Opcional</span>
+                        </label>
+                        <input type="text" id="nuib" name="nuib" value="{{ cliente.nuib|default:'' }}" 
+                               placeholder="Ex: 123456789 (9 dígitos)" 
+                               maxlength="9"
+                               pattern="[0-9]{9}"
+                               autocomplete="off">
+                        <div class="documento-info">
+                            <i class="bi bi-info-circle"></i> Número Único de Identificação do Bilhete (9 dígitos numéricos)
+                        </div>
+                        <div class="error-feedback" id="nuib-error">
+                            <i class="bi bi-exclamation-circle"></i> NUIB deve ter exatamente 9 dígitos numéricos.
+                        </div>
+                        <div class="valid-feedback" id="nuib-valid">
+                            <i class="bi bi-check-circle"></i> NUIB válido.
+                        </div>
+                    </div>
+                    
+                    <!-- BI/Passaporte -->
+                    <div class="form-group">
+                        <label for="bi_passaporte">
+                            <i class="bi bi-pass"></i> BI/Passaporte <span class="badge-doc">Opcional</span>
+                        </label>
+                        <div class="tipo-documento-select">
+                            <button type="button" class="btn-doc" data-tipo="BI">BI</button>
+                            <button type="button" class="btn-doc" data-tipo="Passaporte">Passaporte</button>
+                            <button type="button" class="btn-doc" data-tipo="DIRE">DIRE</button>
+                        </div>
+                        <input type="text" id="bi_passaporte" name="bi_passaporte" value="{{ cliente.bi_passaporte|default:'' }}" 
+                               placeholder="Ex: A123456 (BI) ou P123456 (Passaporte)" 
+                               autocomplete="off">
+                        <div class="documento-info">
+                            <i class="bi bi-info-circle"></i> 
+                            BI: Letra + 6 dígitos (ex: A123456) | 
+                            Passaporte: Letra + 7 dígitos (ex: P1234567) |
+                            DIRE: 8 dígitos (ex: 12345678)
+                        </div>
+                        <div class="error-feedback" id="bi-error">
+                            <i class="bi bi-exclamation-circle"></i> Formato de BI/Passaporte inválido.
+                        </div>
+                        <div class="valid-feedback" id="bi-valid">
+                            <i class="bi bi-check-circle"></i> Documento válido.
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <!-- Data de Emissão -->
+                    <div class="form-group">
+                        <label for="data_emissao_documento">
+                            <i class="bi bi-calendar-date"></i> Data de Emissão do Documento
+                        </label>
+                        <input type="date" id="data_emissao_documento" name="data_emissao_documento" 
+                               value="{{ cliente.data_emissao_documento|date:'Y-m-d'|default:'' }}">
+                        <div class="documento-info">
+                            <i class="bi bi-info-circle"></i> Data de emissão do documento de identificação
+                        </div>
+                    </div>
+                    
+                    <!-- Data de Validade -->
+                    <div class="form-group">
+                        <label for="data_validade_documento">
+                            <i class="bi bi-calendar-x"></i> Data de Validade do Documento
+                        </label>
+                        <input type="date" id="data_validade_documento" name="data_validade_documento" 
+                               value="{{ cliente.data_validade_documento|date:'Y-m-d'|default:'' }}">
+                        <div class="documento-info">
+                            <i class="bi bi-info-circle"></i> Data de validade do documento (se aplicável)
+                        </div>
+                    </div>
+                </div>
             </div>
             
             <div class="form-row">
+                <!-- E-mail -->
                 <div class="form-group">
                     <label for="email">
                         <i class="bi bi-envelope"></i> E-mail
@@ -35,15 +145,20 @@
                     <small class="form-hint">Opcional, mas recomendado</small>
                 </div>
                 
+                <!-- Telefone -->
                 <div class="form-group">
                     <label for="telefone">
-                        <i class="bi bi-whatsapp"></i> Telefone/WhatsApp
+                        <i class="bi bi-whatsapp"></i> Telefone/WhatsApp <span class="campo-obrigatorio">*</span>
                     </label>
                     <input type="tel" id="telefone" name="telefone" value="{{ cliente.telefone|default:'' }}" placeholder="84 1234567" required>
+                    <div class="error-feedback" id="telefone-error">
+                        <i class="bi bi-exclamation-circle"></i> Telefone é obrigatório.
+                    </div>
                 </div>
             </div>
             
             <div class="form-row">
+                <!-- Renda Mensal -->
                 <div class="form-group">
                     <label for="renda_mensal">
                         <i class="bi bi-cash-stack"></i> Renda Mensal (MT)
@@ -52,14 +167,16 @@
                     <small class="form-hint">Usado para análise de crédito</small>
                 </div>
                 
+                <!-- Data de Nascimento -->
                 <div class="form-group">
                     <label for="data_nascimento">
-                        <i class="bi bi-calendar"></i> Data de Cadastro
+                        <i class="bi bi-calendar"></i> Data de Nascimento
                     </label>
                     <input type="date" id="data_nascimento" name="data_nascimento" value="{{ cliente.data_nascimento|date:'Y-m-d'|default:'' }}">
                 </div>
             </div>
             
+            <!-- Endereço -->
             <div class="form-group">
                 <label for="endereco">
                     <i class="bi bi-geo-alt"></i> Endereço
@@ -67,17 +184,264 @@
                 <textarea id="endereco" name="endereco" rows="2" placeholder="Endereço completo">{{ cliente.endereco|default:'' }}</textarea>
             </div>
             
+            <!-- Observações -->
+            <div class="form-group">
+                <label for="observacoes">
+                    <i class="bi bi-sticky"></i> Observações
+                </label>
+                <textarea id="observacoes" name="observacoes" rows="2" placeholder="Observações adicionais sobre o cliente">{{ cliente.observacoes|default:'' }}</textarea>
+            </div>
+            
+            <!-- Ações -->
             <div class="form-actions">
                 <a href="{% url 'clientes' %}" class="btn-secondary">
                     <i class="bi bi-arrow-left"></i> Cancelar
                 </a>
-                <button type="submit" class="btn-primary">
+                <button type="submit" class="btn-primary" id="submit-btn">
                     <i class="bi bi-check-circle"></i> {% if cliente %}Salvar Alterações{% else %}Cadastrar Cliente{% endif %}
                 </button>
             </div>
         </form>
     </div>
 </div>
+
+<!-- JavaScript para validação -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Elementos
+    const form = document.getElementById('cliente-form');
+    const nuitInput = document.getElementById('nuit');
+    const nuibInput = document.getElementById('nuib');
+    const biInput = document.getElementById('bi_passaporte');
+    const tipoDocumentoButtons = document.querySelectorAll('.tipo-documento-select .btn-doc');
+    const submitBtn = document.getElementById('submit-btn');
+    
+    // Função para validar NUIT (9 dígitos numéricos)
+    function validarNUIT(value) {
+        if (!value) return { valid: true, message: '' };
+        const cleaned = value.replace(/\D/g, '');
+        if (cleaned.length === 0) return { valid: true, message: '' };
+        if (cleaned.length !== 9) {
+            return { valid: false, message: 'NUIT deve ter exatamente 9 dígitos numéricos.' };
+        }
+        return { valid: true, message: '' };
+    }
+    
+    // Função para validar NUIB (9 dígitos numéricos)
+    function validarNUIB(value) {
+        if (!value) return { valid: true, message: '' };
+        const cleaned = value.replace(/\D/g, '');
+        if (cleaned.length === 0) return { valid: true, message: '' };
+        if (cleaned.length !== 9) {
+            return { valid: false, message: 'NUIB deve ter exatamente 9 dígitos numéricos.' };
+        }
+        return { valid: true, message: '' };
+    }
+    
+    // Função para validar BI (Letra + 6 dígitos) ou Passaporte (Letra + 7 dígitos) ou DIRE (8 dígitos)
+    function validarBI(value) {
+        if (!value) return { valid: true, message: '', tipo: null };
+        const cleaned = value.trim().toUpperCase();
+        if (cleaned.length === 0) return { valid: true, message: '', tipo: null };
+        
+        // BI: Letra maiúscula + 6 dígitos (ex: A123456)
+        const biPattern = /^[A-Z][0-9]{6}$/;
+        // Passaporte: Letra maiúscula + 7 dígitos (ex: P1234567)
+        const passaportePattern = /^[A-Z][0-9]{7}$/;
+        // DIRE: 8 dígitos (ex: 12345678)
+        const direPattern = /^[0-9]{8}$/;
+        
+        if (biPattern.test(cleaned)) {
+            return { valid: true, message: '', tipo: 'BI' };
+        } else if (passaportePattern.test(cleaned)) {
+            return { valid: true, message: '', tipo: 'Passaporte' };
+        } else if (direPattern.test(cleaned)) {
+            return { valid: true, message: '', tipo: 'DIRE' };
+        } else {
+            return { 
+                valid: false, 
+                message: 'Formato inválido. Use: BI (A123456), Passaporte (P1234567) ou DIRE (12345678).',
+                tipo: null
+            };
+        }
+    }
+    
+    // Função para limpar entrada (apenas dígitos para NUIT/NUIB)
+    function limparEntrada(input) {
+        if (!input) return;
+        input.addEventListener('input', function() {
+            this.value = this.value.replace(/\D/g, '').slice(0, 9);
+        });
+    }
+    
+    // Limpar entradas numéricas
+    limparEntrada(nuitInput);
+    limparEntrada(nuibInput);
+    
+    // Validar NUIT em tempo real
+    nuitInput.addEventListener('input', function() {
+        const result = validarNUIT(this.value);
+        const errorEl = document.getElementById('nuit-error');
+        const validEl = document.getElementById('nuit-valid');
+        this.classList.remove('documento-validado', 'documento-invalido');
+        errorEl.classList.remove('show');
+        validEl.classList.remove('show');
+        
+        if (this.value && !result.valid) {
+            this.classList.add('documento-invalido');
+            errorEl.textContent = '✕ ' + result.message;
+            errorEl.classList.add('show');
+        } else if (this.value && result.valid) {
+            this.classList.add('documento-validado');
+            validEl.classList.add('show');
+        }
+    });
+    
+    // Validar NUIB em tempo real
+    nuibInput.addEventListener('input', function() {
+        const result = validarNUIB(this.value);
+        const errorEl = document.getElementById('nuib-error');
+        const validEl = document.getElementById('nuib-valid');
+        this.classList.remove('documento-validado', 'documento-invalido');
+        errorEl.classList.remove('show');
+        validEl.classList.remove('show');
+        
+        if (this.value && !result.valid) {
+            this.classList.add('documento-invalido');
+            errorEl.textContent = '✕ ' + result.message;
+            errorEl.classList.add('show');
+        } else if (this.value && result.valid) {
+            this.classList.add('documento-validado');
+            validEl.classList.add('show');
+        }
+    });
+    
+    // Validar BI/Passaporte em tempo real
+    biInput.addEventListener('input', function() {
+        const result = validarBI(this.value);
+        const errorEl = document.getElementById('bi-error');
+        const validEl = document.getElementById('bi-valid');
+        this.classList.remove('documento-validado', 'documento-invalido');
+        errorEl.classList.remove('show');
+        validEl.classList.remove('show');
+        
+        if (this.value && !result.valid) {
+            this.classList.add('documento-invalido');
+            errorEl.textContent = '✕ ' + result.message;
+            errorEl.classList.add('show');
+        } else if (this.value && result.valid) {
+            this.classList.add('documento-validado');
+            validEl.classList.add('show');
+            // Atualizar placeholder com o tipo detectado
+            if (result.tipo) {
+                this.setAttribute('data-tipo', result.tipo);
+            }
+        }
+    });
+    
+    // Botões de tipo de documento
+    tipoDocumentoButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            tipoDocumentoButtons.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            const tipo = this.dataset.tipo;
+            biInput.placeholder = tipo === 'BI' ? 'Ex: A123456' : 
+                                   tipo === 'Passaporte' ? 'Ex: P1234567' : 
+                                   'Ex: 12345678';
+            biInput.focus();
+            // Limpar validação anterior
+            biInput.classList.remove('documento-validado', 'documento-invalido');
+            document.getElementById('bi-error').classList.remove('show');
+            document.getElementById('bi-valid').classList.remove('show');
+        });
+    });
+    
+    // Validação do formulário no submit
+    form.addEventListener('submit', function(e) {
+        let isValid = true;
+        let primeiroErro = null;
+        
+        // Validar Nome
+        const nomeInput = document.getElementById('nome');
+        const nomeError = document.getElementById('nome-error');
+        if (!nomeInput.value.trim()) {
+            nomeError.classList.add('show');
+            nomeInput.classList.add('documento-invalido');
+            isValid = false;
+            if (!primeiroErro) primeiroErro = nomeInput;
+        } else {
+            nomeError.classList.remove('show');
+            nomeInput.classList.remove('documento-invalido');
+        }
+        
+        // Validar Telefone
+        const telefoneInput = document.getElementById('telefone');
+        const telefoneError = document.getElementById('telefone-error');
+        if (!telefoneInput.value.trim()) {
+            telefoneError.classList.add('show');
+            telefoneInput.classList.add('documento-invalido');
+            isValid = false;
+            if (!primeiroErro) primeiroErro = telefoneInput;
+        } else {
+            telefoneError.classList.remove('show');
+            telefoneInput.classList.remove('documento-invalido');
+        }
+        
+        // Validar NUIT se preenchido
+        const nuitResult = validarNUIT(nuitInput.value);
+        const nuitError = document.getElementById('nuit-error');
+        if (nuitInput.value && !nuitResult.valid) {
+            nuitError.textContent = '✕ ' + nuitResult.message;
+            nuitError.classList.add('show');
+            nuitInput.classList.add('documento-invalido');
+            isValid = false;
+            if (!primeiroErro) primeiroErro = nuitInput;
+        }
+        
+        // Validar NUIB se preenchido
+        const nuibResult = validarNUIB(nuibInput.value);
+        const nuibError = document.getElementById('nuib-error');
+        if (nuibInput.value && !nuibResult.valid) {
+            nuibError.textContent = '✕ ' + nuibResult.message;
+            nuibError.classList.add('show');
+            nuibInput.classList.add('documento-invalido');
+            isValid = false;
+            if (!primeiroErro) primeiroErro = nuibInput;
+        }
+        
+        // Validar BI/Passaporte se preenchido
+        const biResult = validarBI(biInput.value);
+        const biError = document.getElementById('bi-error');
+        if (biInput.value && !biResult.valid) {
+            biError.textContent = '✕ ' + biResult.message;
+            biError.classList.add('show');
+            biInput.classList.add('documento-invalido');
+            isValid = false;
+            if (!primeiroErro) primeiroErro = biInput;
+        }
+        
+        if (!isValid) {
+            e.preventDefault();
+            if (primeiroErro) {
+                primeiroErro.focus();
+                primeiroErro.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+    });
+    
+    // Remover mensagens de erro ao digitar
+    document.querySelectorAll('input, textarea').forEach(el => {
+        el.addEventListener('input', function() {
+            this.classList.remove('documento-invalido');
+            const errorId = this.id + '-error';
+            const errorEl = document.getElementById(errorId);
+            if (errorEl) {
+                errorEl.classList.remove('show');
+            }
+        });
+    });
+});
+</script>
 
 <script src="{% static 'javascript/clientes.js' %}"></script>
 {% endblock %}

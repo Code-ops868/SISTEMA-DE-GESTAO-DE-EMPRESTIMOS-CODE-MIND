@@ -2,8 +2,9 @@ from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
 from django.core.exceptions import ValidationError
-from .models import PerfilUsuario
+from .models import PerfilUsuario, Cliente
 import re
+from datetime import date
 
 
 class CadastroForm(UserCreationForm):
@@ -67,7 +68,7 @@ class CadastroForm(UserCreationForm):
             'class': 'form-check-input'
         })
     )
-        # NOVO CAMPO: Aceitação dos termos
+    
     aceita_termos = forms.BooleanField(
         required=True, 
         widget=forms.CheckboxInput(attrs={'class': 'form-check-input'}),
@@ -88,7 +89,6 @@ class CadastroForm(UserCreationForm):
     def clean_telefone(self):
         """Valida e formata o telefone"""
         telefone = self.cleaned_data.get('telefone')
-        # Remove caracteres não numéricos
         telefone_limpo = re.sub(r'\D', '', telefone)
         
         if len(telefone_limpo) < 8 or len(telefone_limpo) > 9:
@@ -117,7 +117,6 @@ class CadastroForm(UserCreationForm):
         user.first_name = self.cleaned_data['first_name']
         user.last_name = self.cleaned_data['last_name']
         
-        # Garantir username único
         username = user.username
         base_username = username
         counter = 1
@@ -130,7 +129,6 @@ class CadastroForm(UserCreationForm):
             user.set_password(self.cleaned_data['senha1'])
             user.save()
             
-            # Criar perfil do usuário
             PerfilUsuario.objects.create(
                 user=user,
                 telefone=self.cleaned_data['telefone']
@@ -166,3 +164,97 @@ class LoginForm(forms.Form):
             'class': 'form-check-input'
         })
     )
+
+
+# ============================================
+# FORMULÁRIO DE CLIENTE COM DOCUMENTOS
+# ============================================
+
+class ClienteForm(forms.ModelForm):
+    """
+    Formulário para cadastro/edição de clientes
+    com validação de documentos moçambicanos
+    """
+    
+    class Meta:
+        model = Cliente
+        fields = [
+            'nome', 'email', 'telefone',
+            'nuit', 'nuib', 'bi_passaporte',
+            'data_emissao_documento', 'data_validade_documento',
+            'renda_mensal', 'data_nascimento', 'endereco', 'observacoes'
+        ]
+        widgets = {
+            'data_emissao_documento': forms.DateInput(attrs={'type': 'date'}),
+            'data_validade_documento': forms.DateInput(attrs={'type': 'date'}),
+            'data_nascimento': forms.DateInput(attrs={'type': 'date'}),
+            'endereco': forms.Textarea(attrs={'rows': 3}),
+            'observacoes': forms.Textarea(attrs={'rows': 2}),
+        }
+    
+    def clean_nuit(self):
+        """Valida NUIT - 9 dígitos numéricos"""
+        nuit = self.cleaned_data.get('nuit')
+        if nuit:
+            nuit = nuit.strip()
+            if not re.match(r'^[0-9]{9}$', nuit):
+                raise ValidationError('NUIT deve ter exatamente 9 dígitos numéricos.')
+            
+            # Verificar duplicidade
+            cliente_id = self.instance.id if self.instance else None
+            if Cliente.objects.filter(nuit=nuit).exclude(id=cliente_id).exists():
+                raise ValidationError('NUIT já cadastrado para outro cliente.')
+        return nuit
+    
+    def clean_nuib(self):
+        """Valida NUIB - 9 dígitos numéricos"""
+        nuib = self.cleaned_data.get('nuib')
+        if nuib:
+            nuib = nuib.strip()
+            if not re.match(r'^[0-9]{9}$', nuib):
+                raise ValidationError('NUIB deve ter exatamente 9 dígitos numéricos.')
+            
+            cliente_id = self.instance.id if self.instance else None
+            if Cliente.objects.filter(nuib=nuib).exclude(id=cliente_id).exists():
+                raise ValidationError('NUIB já cadastrado para outro cliente.')
+        return nuib
+    
+    def clean_bi_passaporte(self):
+        """Valida BI/Passaporte conforme legislação moçambicana"""
+        bi = self.cleaned_data.get('bi_passaporte')
+        if bi:
+            bi = bi.strip().upper()
+            
+            # BI: Letra + 6 dígitos (ex: A123456)
+            if re.match(r'^[A-Z][0-9]{6}$', bi):
+                pass
+            # Passaporte: Letra + 7 dígitos (ex: P1234567)
+            elif re.match(r'^[A-Z][0-9]{7}$', bi):
+                pass
+            # DIRE: 8 dígitos (ex: 12345678)
+            elif re.match(r'^[0-9]{8}$', bi):
+                pass
+            else:
+                raise ValidationError(
+                    'Formato inválido. Use BI (A123456), Passaporte (P1234567) ou DIRE (12345678).'
+                )
+            
+            cliente_id = self.instance.id if self.instance else None
+            if Cliente.objects.filter(bi_passaporte=bi).exclude(id=cliente_id).exists():
+                raise ValidationError('BI/Passaporte já cadastrado para outro cliente.')
+        return bi
+    
+    def clean(self):
+        """Validação cruzada dos campos"""
+        cleaned_data = super().clean()
+        data_emissao = cleaned_data.get('data_emissao_documento')
+        data_validade = cleaned_data.get('data_validade_documento')
+        
+        if data_emissao and data_validade:
+            if data_emissao > data_validade:
+                self.add_error('data_validade_documento', 'A data de validade deve ser posterior à data de emissão.')
+            
+            if data_validade < date.today():
+                self.add_error('data_validade_documento', 'O documento está vencido. Por favor, atualize os dados.')
+        
+        return cleaned_data

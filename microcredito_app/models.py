@@ -1,10 +1,9 @@
 from django.db import models
 from django.contrib.auth.models import User
-from django.core.validators import MinValueValidator
+from django.core.validators import MinValueValidator, RegexValidator
 from decimal import Decimal
 
 
-#-------------------classe para provincias e cidades de mocambique---------------------------------------------------------
 # ============================================
 # DADOS GEOGRÁFICOS DE MOÇAMBIQUE
 # ============================================
@@ -45,9 +44,12 @@ class Distrito(models.Model):
         verbose_name = 'Distrito'
         verbose_name_plural = 'Distritos'
         ordering = ['nome']
+
+
 # ============================================
 # PLANOS DE ASSINATURA
 # ============================================
+
 class Plano(models.Model):
     TIPO_CHOICES = [
         ('mensal', 'Mensal'),
@@ -68,8 +70,10 @@ class Plano(models.Model):
         verbose_name = 'Plano'
         verbose_name_plural = 'Planos'
 
-#===============Mpesa=========================
-# Adicionar ao models.py existente
+
+# ============================================
+# TRANSACOES M-PESA
+# ============================================
 
 class TransacaoMPESA(models.Model):
     STATUS_CHOICES = [
@@ -99,9 +103,12 @@ class TransacaoMPESA(models.Model):
         verbose_name = 'Transação M-PESA'
         verbose_name_plural = 'Transações M-PESA'
         ordering = ['-data_criacao']
+
+
 # ============================================
 # ASSINATURA DO USUÁRIO
 # ============================================
+
 class Assinatura(models.Model):
     STATUS_CHOICES = [
         ('ativa', 'Ativa'),
@@ -132,6 +139,7 @@ class Assinatura(models.Model):
 # ============================================
 # PAGAMENTO DE ASSINATURA
 # ============================================
+
 class PagamentoAssinatura(models.Model):
     STATUS_CHOICES = [
         ('pendente', 'Pendente'),
@@ -164,16 +172,17 @@ class PagamentoAssinatura(models.Model):
         verbose_name_plural = 'Pagamentos de Assinatura'
         ordering = ['-data_pagamento']
 
+
 # ============================================
-# 1. PERFIL DO USUÁRIO (estende User)
+# PERFIL DO USUÁRIO
 # ============================================
+
 class PerfilUsuario(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='perfil')
     foto = models.ImageField('Foto/Logo', upload_to='perfis/%Y/%m/', blank=True, null=True)
     telefone = models.CharField('Telefone/WhatsApp', max_length=15, blank=True, null=True)
     endereco = models.TextField('Endereço', blank=True, null=True)
     
-    # Campos de localização
     provincia = models.ForeignKey(Provincia, on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Província')
     cidade = models.ForeignKey(Cidade, on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Cidade')
     distrito = models.ForeignKey(Distrito, on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Distrito')
@@ -194,9 +203,12 @@ class PerfilUsuario(models.Model):
     class Meta:
         verbose_name = 'Perfil do Usuário'
         verbose_name_plural = 'Perfis dos Usuários'
+
+
 # ============================================
-# 2. CLIENTE (quem pega empréstimo)
+# CLIENTE - ATUALIZADO COM DOCUMENTOS
 # ============================================
+
 class Cliente(models.Model):
     usuario = models.ForeignKey(
         User, 
@@ -222,22 +234,131 @@ class Cliente(models.Model):
     )
     data_nascimento = models.DateField('Data de Nascimento', blank=True, null=True)
     observacoes = models.TextField('Observações', blank=True, null=True)
+    
+    # ============================================
+    # DOCUMENTOS DE IDENTIFICAÇÃO - MOÇAMBIQUE
+    # ============================================
+    nuit = models.CharField(
+        max_length=9,
+        blank=True,
+        null=True,
+        verbose_name='NUIT',
+        validators=[
+            RegexValidator(
+                r'^[0-9]{9}$',
+                'NUIT deve ter exatamente 9 dígitos numéricos.'
+            )
+        ],
+        help_text='Número Único de Identificação Tributária (9 dígitos)',
+        db_index=True,
+    )
+    
+    nuib = models.CharField(
+        max_length=9,
+        blank=True,
+        null=True,
+        verbose_name='NUIB',
+        validators=[
+            RegexValidator(
+                r'^[0-9]{9}$',
+                'NUIB deve ter exatamente 9 dígitos numéricos.'
+            )
+        ],
+        help_text='Número Único de Identificação do Bilhete (9 dígitos)',
+        db_index=True,
+    )
+    
+    bi_passaporte = models.CharField(
+        max_length=20,
+        blank=True,
+        null=True,
+        verbose_name='BI/Passaporte',
+        help_text='BI (Letra+6 dígitos), Passaporte (Letra+7 dígitos) ou DIRE (8 dígitos)',
+        db_index=True,
+    )
+    
+    data_emissao_documento = models.DateField(
+        blank=True,
+        null=True,
+        verbose_name='Data de Emissão do Documento'
+    )
+    
+    data_validade_documento = models.DateField(
+        blank=True,
+        null=True,
+        verbose_name='Data de Validade do Documento'
+    )
+    
     data_cadastro = models.DateTimeField(auto_now_add=True)
     data_atualizacao = models.DateTimeField(auto_now=True)
     
     def __str__(self):
         return self.nome
     
+    def get_documentos_info(self):
+        """Retorna informações sobre os documentos do cliente"""
+        docs = []
+        if self.nuit:
+            docs.append(f'NUIT: {self.nuit}')
+        if self.nuib:
+            docs.append(f'NUIB: {self.nuib}')
+        if self.bi_passaporte:
+            docs.append(f'BI/Passaporte: {self.bi_passaporte}')
+        return ', '.join(docs) if docs else 'Nenhum documento cadastrado'
+    
+    def is_empresa(self):
+        """Verifica se o cliente é uma empresa (tem NUIT)"""
+        return bool(self.nuit)
+    
+    def is_pessoa_fisica(self):
+        """Verifica se o cliente é pessoa física"""
+        return not bool(self.nuit)
+    
+    def documento_esta_valido(self):
+        """Verifica se o documento está dentro do prazo de validade"""
+        from datetime import date
+        if not self.data_validade_documento:
+            return True
+        return self.data_validade_documento >= date.today()
+    
+    def dias_para_vencer_documento(self):
+        """Retorna dias restantes para o documento vencer"""
+        from datetime import date
+        if not self.data_validade_documento:
+            return None
+        delta = self.data_validade_documento - date.today()
+        return delta.days
+    
+    def get_tipo_documento(self):
+        """Retorna o tipo de documento baseado no formato do BI/Passaporte"""
+        import re
+        if not self.bi_passaporte:
+            return None
+        valor = self.bi_passaporte.upper().strip()
+        if re.match(r'^[A-Z][0-9]{6}$', valor):
+            return 'BI'
+        elif re.match(r'^[A-Z][0-9]{7}$', valor):
+            return 'Passaporte'
+        elif re.match(r'^[0-9]{8}$', valor):
+            return 'DIRE'
+        return 'Desconhecido'
+    
     class Meta:
         verbose_name = 'Cliente'
         verbose_name_plural = 'Clientes'
         ordering = ['-data_cadastro']
         unique_together = ['usuario', 'telefone']
+        indexes = [
+            models.Index(fields=['nuit']),
+            models.Index(fields=['nuib']),
+            models.Index(fields=['bi_passaporte']),
+        ]
 
 
 # ============================================
-# 3. EMPRÉSTIMO
+# EMPRÉSTIMO
 # ============================================
+
 class Emprestimo(models.Model):
     STATUS_CHOICES = [
         ('ativo', 'Ativo'),
@@ -303,15 +424,12 @@ class Emprestimo(models.Model):
     atualizado_em = models.DateTimeField(auto_now=True)
     
     def save(self, *args, **kwargs):
-        # Calcular valor da parcela automaticamente
         if self.valor and self.taxa_juros and self.quantidade_parcelas:
             if self.tipo_juros == 'simples':
-                # Juros Simples: J = C * i * t
                 total_juros = self.valor * (self.taxa_juros / 100) * self.quantidade_parcelas
                 total = self.valor + total_juros
                 self.valor_parcela = total / self.quantidade_parcelas
             else:
-                # Juros Compostos (PRICE): parcelas fixas
                 taxa_mensal = self.taxa_juros / 100
                 if taxa_mensal == 0:
                     self.valor_parcela = self.valor / self.quantidade_parcelas
@@ -331,8 +449,9 @@ class Emprestimo(models.Model):
 
 
 # ============================================
-# 4. PARCELA
+# PARCELA
 # ============================================
+
 class Parcela(models.Model):
     STATUS_CHOICES = [
         ('pendente', 'Pendente'),
@@ -362,8 +481,9 @@ class Parcela(models.Model):
 
 
 # ============================================
-# 5. PAGAMENTO
+# PAGAMENTO
 # ============================================
+
 class Pagamento(models.Model):
     FORMA_CHOICES = [
         ('dinheiro', 'Dinheiro'),
@@ -394,12 +514,10 @@ class Pagamento(models.Model):
     
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-        # Atualizar status da parcela
         self.parcela.status = 'pago'
         self.parcela.data_pagamento = self.data_pagamento.date()
         self.parcela.save()
         
-        # Verificar se todas as parcelas do empréstimo estão pagas
         todas_pagas = all(p.status == 'pago' for p in self.parcela.emprestimo.parcelas.all())
         if todas_pagas:
             self.parcela.emprestimo.status = 'pago'
@@ -413,10 +531,11 @@ class Pagamento(models.Model):
         verbose_name_plural = 'Pagamentos'
         ordering = ['-data_pagamento']
 
-#--------------Notificacoes------------------------------------------
+
 # ============================================
 # NOTIFICAÇÕES
 # ============================================
+
 class Notificacao(models.Model):
     TIPO_CHOICES = [
         ('vencimento', 'Lembrete de Vencimento'),
@@ -449,25 +568,22 @@ class Notificacao(models.Model):
         ordering = ['-data_envio']
 
 
-# models.py
+# ============================================
+# CONFIGURAÇÃO DE NOTIFICAÇÃO
+# ============================================
 
 class ConfiguracaoNotificacao(models.Model):
     empresa = models.OneToOneField('Empresa', on_delete=models.CASCADE, related_name='config_notificacao')
     
-    # Configurações WhatsApp (existentes)
     whatsapp_token = models.CharField('Token WhatsApp Business', max_length=255, blank=True, null=True)
     whatsapp_phone_id = models.CharField('Phone ID WhatsApp', max_length=255, blank=True, null=True)
-    
-    # Configurações SMS (existentes)
     sms_api_key = models.CharField('API Key SMS', max_length=255, blank=True, null=True)
     
-    # Configurações de alertas por email (existentes)
     notificar_vencimento = models.BooleanField('Notificar vencimento', default=True)
     notificar_atraso = models.BooleanField('Notificar atraso', default=True)
     dias_antecedencia = models.IntegerField('Dias de antecedência', default=5)
     atraso_frequencia = models.IntegerField('Frequência de alertas em atraso (dias)', default=2)
     
-    # ✅ NOVOS CAMPOS: Notificações Push (Popup no navegador)
     push_notificacoes_ativas = models.BooleanField('Ativar notificações push', default=True)
     push_alertar_vencimento = models.BooleanField('Alertar sobre parcelas próximas', default=True)
     push_alertar_atraso = models.BooleanField('Alertar sobre parcelas em atraso', default=True)
@@ -481,10 +597,12 @@ class ConfiguracaoNotificacao(models.Model):
     
     def __str__(self):
         return f"Configurações de {self.empresa.nome}"
-#------------Classe Empresa--------------------------
+
+
 # ============================================
-# EMPRESA (NOVO - dados da empresa de microcrédito)
+# EMPRESA
 # ============================================
+
 class Empresa(models.Model):
     STATUS_CHOICES = [
         ('ativa', 'Ativa'),
@@ -512,10 +630,10 @@ class Empresa(models.Model):
         verbose_name_plural = 'Empresas'
 
 
-# PUSHWEB
 # ============================================
-# PUSH SUBSCRIPTION (Notificações Push)
+# PUSH SUBSCRIPTION
 # ============================================
+
 class PushSubscription(models.Model):
     usuario = models.ForeignKey(User, on_delete=models.CASCADE, related_name='push_subscriptions')
     subscription_info = models.JSONField('Informações da inscrição')
@@ -529,9 +647,13 @@ class PushSubscription(models.Model):
     class Meta:
         verbose_name = 'Inscrição Push'
         verbose_name_plural = 'Inscrições Push'
-# firebase
+
+
+# ============================================
+# FCM TOKEN
+# ============================================
+
 class FCMToken(models.Model):
-    """Modelo simples para armazenar tokens FCM"""
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='fcm_tokens')
     token = models.CharField(max_length=500, unique=True)
     device_type = models.CharField(max_length=20, default='web')
@@ -546,7 +668,10 @@ class FCMToken(models.Model):
         return f"{self.user.email} - {self.token[:50]}..."
 
 
-# FUNCIONÁRIO - CONTROLE DE PERMISSÕES
+# ============================================
+# FUNCIONÁRIO
+# ============================================
+
 class Funcionario(models.Model):
     CARGO_CHOICES = [
         ('admin_empresa', 'Administrador da Empresa'),
@@ -570,12 +695,13 @@ class Funcionario(models.Model):
     class Meta:
         verbose_name = 'Funcionário'
         verbose_name_plural = 'Funcionários'
-#============================================================================================
-#modelo para verifcar emails
-#============================================================================================
+
+
+# ============================================
+# VERIFICAÇÃO DE EMAIL
+# ============================================
+
 class EmailVerificacao(models.Model):
-    """Modelo para gerenciar verificação de email de novos usuários"""
-    
     usuario = models.OneToOneField(User, on_delete=models.CASCADE, related_name='verificacao_email')
     codigo = models.CharField('Código de verificação', max_length=100, unique=True)
     criado_em = models.DateTimeField('Criado em', auto_now_add=True)
@@ -586,12 +712,10 @@ class EmailVerificacao(models.Model):
         return f"{self.usuario.email} - {self.verificado_em and 'Verificado' or 'Pendente'}"
     
     def is_expired(self):
-        """Verifica se o código já expirou"""
         from django.utils import timezone
         return timezone.now() > self.expira_em
     
     def is_verified(self):
-        """Verifica se o email já foi confirmado"""
         return self.verificado_em is not None
     
     class Meta:
