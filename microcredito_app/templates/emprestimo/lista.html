@@ -1,14 +1,14 @@
-{% extends "modelo.html" %}
+{% extends "core/dashboard_base.html" %}
 {% load static %}
 
-{% block title %}Empréstimos - CODE-MIND{% endblock %}
+{% block title %}Empréstimos - CODEMIND{% endblock %}
 
-{% block extra_head %}
+{% block page_css %}
 <link rel="stylesheet" href="{% static 'datatables/css/dataTables.bootstrap5.min.css' %}">
 <link rel="stylesheet" href="{% static 'css/emprestimos.css' %}">
 {% endblock %}
 
-{% block content %}
+{% block dashboard_content %}
 <div class="emprestimos-container">
     <div class="emprestimos-header">
         <div>
@@ -90,7 +90,6 @@
                         </td>
                         <td>{{ emp.data_contrato|date:"d/m/Y" }}</td>
                         <td class="actions text-center">
-                           
                             <button class="btn btn-sm btn-outline-success" onclick="baixarEmprestimo({{ emp.id }})" title="Baixar Empréstimo">
                                 <i class="bi bi-cash-stack"></i>
                             </button>
@@ -121,16 +120,42 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Verificar se jQuery está disponível
     if (typeof jQuery !== 'undefined' && jQuery.fn && jQuery.fn.DataTable) {
-        jQuery('#emprestimos-table').DataTable({
-            language: {
-                // Usando arquivo LOCAL - SEM CDN
-                url: "{% static 'datatables/i18n/pt-BR.json' %}"
-            },
-            pageLength: 10,
-            responsive: true,
-            order: [[0, 'desc']]
-        });
-        console.log('✅ DataTables inicializado com sucesso');
+        
+        // Verificar se a tabela existe e tem dados
+        const tabela = document.getElementById('emprestimos-table');
+        const tbody = tabela ? tabela.querySelector('tbody') : null;
+        const temDados = tbody && tbody.querySelector('tr:not(.empty-state)');
+        
+        if (temDados) {
+            $('#emprestimos-table').DataTable({
+                language: {
+                    "sEmptyTable": "Nenhum empréstimo encontrado",
+                    "sInfo": "Mostrando _START_ até _END_ de _TOTAL_ empréstimos",
+                    "sInfoEmpty": "Mostrando 0 até 0 de 0 empréstimos",
+                    "sInfoFiltered": "(filtrado de _MAX_ empréstimos no total)",
+                    "sLengthMenu": "Mostrar _MENU_ empréstimos por página",
+                    "sLoadingRecords": "Carregando...",
+                    "sProcessing": "Processando...",
+                    "sSearch": "Pesquisar:",
+                    "sZeroRecords": "Nenhum empréstimo encontrado",
+                    "oPaginate": {
+                        "sFirst": "Primeiro",
+                        "sLast": "Último",
+                        "sNext": "Seguinte",
+                        "sPrevious": "Anterior"
+                    }
+                },
+                pageLength: 10,
+                responsive: true,
+                order: [[0, 'desc']],
+                columnDefs: [
+                    { orderable: false, targets: 8 } // Desabilitar ordenação na coluna Ações
+                ]
+            });
+            console.log('✅ DataTables inicializado com sucesso');
+        } else {
+            console.log('ℹ️ Tabela vazia, DataTables não inicializado');
+        }
     } else {
         console.error('❌ jQuery ou DataTables não carregado');
     }
