@@ -1,17 +1,14 @@
-{% extends "core/dashboard_base.html" %}
+{% extends "modelo.html" %}
 {% load static %}
 
-{% block title %}Empréstimos - CODEMIND{% endblock %}
+{% block title %}Empréstimos - CODE-MIND{% endblock %}
 
-{% block page_css %}
+{% block extra_head %}
 <link rel="stylesheet" href="{% static 'datatables/css/dataTables.bootstrap5.min.css' %}">
 <link rel="stylesheet" href="{% static 'css/emprestimos.css' %}">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-<!-- CSS PERSONALIZADO DO FLATPICKR -->
-<link rel="stylesheet" href="{% static 'css/flatpickr-custom.css' %}">
 {% endblock %}
 
-{% block dashboard_content %}
+{% block content %}
 <div class="emprestimos-container">
     <div class="emprestimos-header">
         <div>
@@ -31,9 +28,9 @@
                     <label for="status">Status</label>
                     <select name="status" id="status" class="form-control">
                         <option value="">Todos</option>
-                        <option value="ativo" {% if request.GET.status == 'ativo' %}selected{% endif %}>Ativo</option>
-                        <option value="pago" {% if request.GET.status == 'pago' %}selected{% endif %}>Pago</option>
-                        <option value="atrasado" {% if request.GET.status == 'atrasado' %}selected{% endif %}>Atrasado</option>
+                        <option value="ativo">Ativo</option>
+                        <option value="pago">Pago</option>
+                        <option value="atrasado">Atrasado</option>
                     </select>
                 </div>
                 <div class="filtro-group">
@@ -41,19 +38,17 @@
                     <select name="cliente" id="cliente" class="form-control">
                         <option value="">Todos</option>
                         {% for cliente in clientes %}
-                        <option value="{{ cliente.id }}" {% if request.GET.cliente == cliente.id|stringformat:"s" %}selected{% endif %}>
-                            {{ cliente.nome }}
-                        </option>
+                        <option value="{{ cliente.id }}">{{ cliente.nome }}</option>
                         {% endfor %}
                     </select>
                 </div>
                 <div class="filtro-group">
                     <label for="data_inicio">Data Início</label>
-                    <input type="date" name="data_inicio" id="data_inicio" class="form-control" value="{{ request.GET.data_inicio }}">
+                    <input type="date" name="data_inicio" id="data_inicio" class="form-control">
                 </div>
                 <div class="filtro-group">
                     <label for="data_fim">Data Fim</label>
-                    <input type="date" name="data_fim" id="data_fim" class="form-control" value="{{ request.GET.data_fim }}">
+                    <input type="date" name="data_fim" id="data_fim" class="form-control">
                 </div>
                 <div class="filtro-actions">
                     <button type="submit" class="btn-primary btn-sm"><i class="bi bi-search"></i> Filtrar</button>
@@ -89,29 +84,24 @@
                         <td class="text-center">{{ emp.quantidade_parcelas }}x</td>
                         <td class="text-success fw-bold">MT {{ emp.valor_parcela|floatformat:2 }}</td>
                         <td>
-                            <span class="badge {% if emp.status == 'ativo' %}badge-success{% elif emp.status == 'atrasado' %}badge-danger{% else %}badge-secondary{% endif %}">
+                            <span class="badge {% if emp.status == 'ativo' %}bg-success{% elif emp.status == 'atrasado' %}bg-danger{% else %}bg-secondary{% endif %}">
                                 {{ emp.get_status_display }}
                             </span>
                         </td>
                         <td>{{ emp.data_contrato|date:"d/m/Y" }}</td>
                         <td class="actions text-center">
-                            <a href="{% url 'emprestimo_parcelas' emp.id %}" class="btn btn-sm btn-outline-primary" title="Ver Parcelas">
-                                <i class="bi bi-list-ul"></i>
-                            </a>
+                           
                             <button class="btn btn-sm btn-outline-success" onclick="baixarEmprestimo({{ emp.id }})" title="Baixar Empréstimo">
                                 <i class="bi bi-cash-stack"></i>
                             </button>
                         </td>
                     </tr>
                     {% empty %}
-                    <!-- ✅ CORREÇÃO: Classe movida para o TR -->
-                    <tr class="empty-state-row">
-                        <td colspan="9" class="text-center py-5">
-                            <i class="bi bi-calculator fs-1 d-block mb-3" style="color: #88ff66;"></i>
-                            <p style="color: #8b949e;">Nenhum empréstimo cadastrado</p>
-                            <a href="{% url 'emprestimo_cadastrar' %}" class="btn-primary mt-3" style="display: inline-block;">
-                                <i class="bi bi-plus-circle-fill"></i> Cadastrar primeiro empréstimo
-                            </a>
+                    <tr>
+                        <td colspan="9" class="empty-state text-center py-5">
+                            <i class="bi bi-calculator fs-1"></i>
+                            <p>Nenhum empréstimo cadastrado</p>
+                            <a href="{% url 'emprestimo_cadastrar' %}" class="btn btn-primary">Cadastrar primeiro empréstimo</a>
                         </td>
                     </tr>
                     {% endfor %}
@@ -127,44 +117,20 @@
 <script src="{% static 'datatables/js/dataTables.bootstrap5.min.js' %}"></script>
 
 <script>
+// Aguardar o DOM carregar completamente
 document.addEventListener('DOMContentLoaded', function() {
+    // Verificar se jQuery está disponível
     if (typeof jQuery !== 'undefined' && jQuery.fn && jQuery.fn.DataTable) {
-        
-        const tabela = document.getElementById('emprestimos-table');
-        const tbody = tabela ? tabela.querySelector('tbody') : null;
-        // ✅ CORREÇÃO: Seletor corrigido
-        const temDados = tbody && tbody.querySelector('tr:not(.empty-state-row)');
-        
-        if (temDados) {
-            $('#emprestimos-table').DataTable({
-                language: {
-                    "sEmptyTable": "Nenhum empréstimo encontrado",
-                    "sInfo": "Mostrando _START_ até _END_ de _TOTAL_ empréstimos",
-                    "sInfoEmpty": "Mostrando 0 até 0 de 0 empréstimos",
-                    "sInfoFiltered": "(filtrado de _MAX_ empréstimos no total)",
-                    "sLengthMenu": "Mostrar _MENU_ empréstimos por página",
-                    "sLoadingRecords": "Carregando...",
-                    "sProcessing": "Processando...",
-                    "sSearch": "Pesquisar:",
-                    "sZeroRecords": "Nenhum empréstimo encontrado",
-                    "oPaginate": {
-                        "sFirst": "Primeiro",
-                        "sLast": "Último",
-                        "sNext": "Seguinte",
-                        "sPrevious": "Anterior"
-                    }
-                },
-                pageLength: 10,
-                responsive: true,
-                order: [[0, 'desc']],
-                columnDefs: [
-                    { orderable: false, targets: 8 }
-                ]
-            });
-            console.log('✅ DataTables inicializado com sucesso');
-        } else {
-            console.log('ℹ️ Tabela vazia, DataTables não inicializado');
-        }
+        jQuery('#emprestimos-table').DataTable({
+            language: {
+                // Usando arquivo LOCAL - SEM CDN
+                url: "{% static 'datatables/i18n/pt-BR.json' %}"
+            },
+            pageLength: 10,
+            responsive: true,
+            order: [[0, 'desc']]
+        });
+        console.log('✅ DataTables inicializado com sucesso');
     } else {
         console.error('❌ jQuery ou DataTables não carregado');
     }
@@ -172,25 +138,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function baixarEmprestimo(id) {
     if (confirm('Deseja marcar este empréstimo como pago? Todas as parcelas serão quitadas.')) {
-        // Usar fetch para requisição POST
-        fetch(`/emprestimos/baixar/${id}/`, {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || '',
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert(data.message);
-                location.reload();
-            } else {
-                alert(data.error || 'Erro ao baixar empréstimo');
-            }
-        })
-        .catch(error => {
-            alert('Erro ao comunicar com o servidor');
-        });
+        window.location.href = `/emprestimos/baixar/${id}/`;
     }
 }
 </script>
