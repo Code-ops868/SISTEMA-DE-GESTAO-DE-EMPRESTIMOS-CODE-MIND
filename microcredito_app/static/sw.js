@@ -1,4 +1,4 @@
-﻿const CACHE_NAME = 'gestao-v1';
+﻿const CACHE_NAME = 'gestao-v2';
 const urlsToCache = ['/', '/static/css/modelo.css', '/static/css/clientes.css', '/static/css/emprestimos.css', '/static/css/dashboard.css', '/static/img/logo.svg', '/static/manifest.json'];
 self.addEventListener('install', event => { event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))); });
 self.addEventListener('fetch', event => { event.respondWith(caches.match(event.request).then(response => response || fetch(event.request))); });
