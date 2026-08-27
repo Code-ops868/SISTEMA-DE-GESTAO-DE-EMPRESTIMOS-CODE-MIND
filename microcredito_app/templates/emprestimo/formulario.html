@@ -1,72 +1,444 @@
-{% extends "modelo.html" %}
+{% extends "core/dashboard_base.html" %}
 {% load static %}
 
-{% block title %}Novo Empréstimo - CODE-MIND{% endblock %}
+{% block title %}Novo Empréstimo - CODEMIND{% endblock %}
 
-{% block extra_head %}
+{% block page_css %}
 <link rel="stylesheet" href="{% static 'css/emprestimos.css' %}">
+<!-- Flatpickr para calendários estilizados -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
+<style>
+    /* Estilos para os calendários Flatpickr */
+    .flatpickr-calendar {
+        background: #0d1117 !important;
+        border: 1px solid rgba(56, 139, 253, 0.3) !important;
+        border-radius: 12px !important;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6) !important;
+    }
+    .flatpickr-calendar .flatpickr-day {
+        color: #e6edf3 !important;
+    }
+    .flatpickr-calendar .flatpickr-day.selected {
+        background: #88ff66 !important;
+        color: #0a0c10 !important;
+        border-color: #88ff66 !important;
+    }
+    .flatpickr-calendar .flatpickr-day:hover {
+        background: rgba(136, 255, 102, 0.2) !important;
+    }
+    .flatpickr-calendar .flatpickr-day.today {
+        border-color: #88ff66 !important;
+    }
+    .flatpickr-calendar .flatpickr-day.inRange {
+        background: rgba(136, 255, 102, 0.1) !important;
+    }
+    .flatpickr-calendar .flatpickr-day.disabled {
+        color: rgba(230, 237, 243, 0.3) !important;
+    }
+    .flatpickr-calendar .flatpickr-month {
+        color: #e6edf3 !important;
+    }
+    .flatpickr-calendar .flatpickr-weekday {
+        color: #88ff66 !important;
+    }
+    .flatpickr-calendar .flatpickr-prev-month svg,
+    .flatpickr-calendar .flatpickr-next-month svg {
+        fill: #88ff66 !important;
+    }
+    .flatpickr-calendar .flatpickr-prev-month:hover svg,
+    .flatpickr-calendar .flatpickr-next-month:hover svg {
+        fill: #bbff88 !important;
+    }
+    .flatpickr-calendar .flatpickr-current-month .flatpickr-monthDropdown-months {
+        background: #0d1117 !important;
+        color: #e6edf3 !important;
+    }
+    .flatpickr-calendar .flatpickr-current-month input.cur-year {
+        color: #e6edf3 !important;
+    }
+    .flatpickr-calendar .flatpickr-time input {
+        color: #e6edf3 !important;
+    }
+    .flatpickr-calendar .flatpickr-time .flatpickr-am-pm {
+        color: #e6edf3 !important;
+    }
+    .flatpickr-calendar .flatpickr-time .numInputWrapper span.arrowUp:after {
+        border-bottom-color: #88ff66 !important;
+    }
+    .flatpickr-calendar .flatpickr-time .numInputWrapper span.arrowDown:after {
+        border-top-color: #88ff66 !important;
+    }
+    .flatpickr-input {
+        cursor: pointer !important;
+        background-color: rgba(13, 17, 23, 0.8) !important;
+        color: #e6edf3 !important;
+        border: 1px solid rgba(56, 139, 253, 0.25) !important;
+        border-radius: 10px !important;
+        padding: 0.7rem 1rem !important;
+        width: 100% !important;
+        font-size: 0.92rem !important;
+        transition: all 0.3s ease !important;
+    }
+    .flatpickr-input:focus {
+        outline: none !important;
+        border-color: #88ff66 !important;
+        box-shadow: 0 0 0 3px rgba(136, 255, 102, 0.15) !important;
+    }
+    .flatpickr-input::placeholder {
+        color: rgba(230, 237, 243, 0.3) !important;
+    }
+</style>
 {% endblock %}
 
-{% block content %}
+{% block dashboard_content %}
 <div class="emprestimo-form-container">
     <div class="emprestimo-form-card">
         <div class="form-header">
             <i class="bi bi-calculator-fill"></i>
-            <h2>Novo Empréstimo</h2>
-            <p>Preencha os dados para simular e cadastrar um novo empréstimo</p>
+            <h2>{% if emprestimo %}Editar Empréstimo{% else %}Novo Empréstimo{% endif %}</h2>
+            <p>{% if emprestimo %}Altere os dados do empréstimo{% else %}Preencha os dados para simular e cadastrar um novo empréstimo{% endif %}</p>
         </div>
-        <form method="post" action="{% url 'emprestimo_cadastrar' %}" id="formEmprestimo">
+        
+        <form method="post" action="{% if emprestimo %}{% url 'emprestimo_editar' emprestimo.id %}{% else %}{% url 'emprestimo_cadastrar' %}{% endif %}" id="formEmprestimo" novalidate>
             {% csrf_token %}
+            
+            <!-- Cliente -->
             <div class="form-group">
-                <label for="cliente"><i class="bi bi-person"></i> Cliente</label>
+                <label for="cliente"><i class="bi bi-person"></i> Cliente <span class="campo-obrigatorio">*</span></label>
                 <select id="cliente" name="cliente" class="form-control" required>
                     <option value="">Selecione um cliente</option>
                     {% for cliente in clientes %}
-                    <option value="{{ cliente.id }}">{{ cliente.nome }} - {{ cliente.telefone }}</option>
+                    <option value="{{ cliente.id }}" {% if emprestimo and emprestimo.cliente.id == cliente.id %}selected{% endif %}>
+                        {{ cliente.nome }} - {{ cliente.telefone }}
+                        {% if cliente.nuit %} (NUIT: {{ cliente.nuit }}){% endif %}
+                    </option>
                     {% endfor %}
                 </select>
+                <div class="error-feedback" id="cliente-error">
+                    <i class="bi bi-exclamation-circle"></i> Selecione um cliente.
+                </div>
             </div>
+            
             <div class="form-row">
+                <!-- Valor -->
                 <div class="form-group">
-                    <label for="valor"><i class="bi bi-cash"></i> Valor (MT)</label>
-                    <input type="text" id="valor" name="valor" class="form-control" placeholder="0,00" required>
+                    <label for="valor"><i class="bi bi-cash"></i> Valor (MT) <span class="campo-obrigatorio">*</span></label>
+                    <input type="text" id="valor" name="valor" class="form-control" 
+                           placeholder="0,00" 
+                           value="{{ emprestimo.valor|default:'' }}"
+                           required>
+                    <div class="error-feedback" id="valor-error">
+                        <i class="bi bi-exclamation-circle"></i> Valor é obrigatório.
+                    </div>
                 </div>
+                
+                <!-- Taxa de Juros -->
                 <div class="form-group">
-                    <label for="taxa_juros"><i class="bi bi-percent"></i> Taxa de Juros (%)</label>
-                    <input type="number" id="taxa_juros" name="taxa_juros" class="form-control" step="0.01" placeholder="0.00" required>
+                    <label for="taxa_juros"><i class="bi bi-percent"></i> Taxa de Juros (%) <span class="campo-obrigatorio">*</span></label>
+                    <input type="number" id="taxa_juros" name="taxa_juros" class="form-control" 
+                           step="0.01" 
+                           placeholder="0.00" 
+                           value="{{ emprestimo.taxa_juros|default:'' }}"
+                           required>
+                    <div class="error-feedback" id="taxa_juros-error">
+                        <i class="bi bi-exclamation-circle"></i> Taxa de juros é obrigatória.
+                    </div>
                 </div>
             </div>
+            
             <div class="form-row">
+                <!-- Número de Parcelas -->
                 <div class="form-group">
-                    <label for="quantidade_parcelas"><i class="bi bi-grid"></i> Número de Parcelas</label>
-                    <input type="number" id="quantidade_parcelas" name="quantidade_parcelas" class="form-control" min="1" max="60" required>
+                    <label for="quantidade_parcelas"><i class="bi bi-grid"></i> Número de Parcelas <span class="campo-obrigatorio">*</span></label>
+                    <input type="number" id="quantidade_parcelas" name="quantidade_parcelas" class="form-control" 
+                           min="1" max="60" 
+                           placeholder="1 a 60" 
+                           value="{{ emprestimo.quantidade_parcelas|default:'' }}"
+                           required>
+                    <div class="error-feedback" id="quantidade_parcelas-error">
+                        <i class="bi bi-exclamation-circle"></i> Número de parcelas (1 a 60).
+                    </div>
                 </div>
+                
+                <!-- Data do Primeiro Vencimento -->
                 <div class="form-group">
-                    <label for="data_primeiro_vencimento"><i class="bi bi-calendar"></i> Primeiro Vencimento</label>
-                    <input type="date" id="data_primeiro_vencimento" name="data_primeiro_vencimento" class="form-control" required>
+                    <label for="data_primeiro_vencimento"><i class="bi bi-calendar"></i> Primeiro Vencimento <span class="campo-obrigatorio">*</span></label>
+                    <input type="text" id="data_primeiro_vencimento" name="data_primeiro_vencimento" class="form-control" 
+                           placeholder="Selecione a data" 
+                           value="{{ emprestimo.data_primeiro_vencimento|date:'Y-m-d'|default:'' }}"
+                           readonly
+                           required>
+                    <div class="error-feedback" id="data_primeiro_vencimento-error">
+                        <i class="bi bi-exclamation-circle"></i> Selecione a data do primeiro vencimento.
+                    </div>
                 </div>
             </div>
+            
+            <!-- Tipo de Juros -->
             <div class="form-group">
-                <label for="tipo_juros"><i class="bi bi-calculator"></i> Tipo de Juros</label>
+                <label for="tipo_juros"><i class="bi bi-calculator"></i> Tipo de Juros <span class="campo-obrigatorio">*</span></label>
                 <select id="tipo_juros" name="tipo_juros" class="form-control" required>
-                    <option value="composto">Juros Compostos (PRICE - Parcelas Fixas)</option>
-                    <option value="simples">Juros Simples</option>
+                    <option value="composto" {% if emprestimo and emprestimo.tipo_juros == 'composto' %}selected{% endif %}>
+                        Juros Compostos (PRICE - Parcelas Fixas)
+                    </option>
+                    <option value="simples" {% if emprestimo and emprestimo.tipo_juros == 'simples' %}selected{% endif %}>
+                        Juros Simples
+                    </option>
                 </select>
             </div>
+            
+            <!-- Simulação -->
             <div class="simulacao-card" id="simulacao-card" style="display:none;">
-                <div class="simulacao-header"><i class="bi bi-calculator"></i><h4>Simulação</h4></div>
+                <div class="simulacao-header">
+                    <i class="bi bi-calculator"></i>
+                    <h4>Simulação do Empréstimo</h4>
+                </div>
                 <div class="simulacao-content">
-                    <div class="simulacao-row"><span>Valor da Parcela:</span><strong id="valor-parcela">MT 0,00</strong></div>
-                    <div class="simulacao-row"><span>Total a Pagar:</span><strong id="total-pagar">MT 0,00</strong></div>
-                    <div class="simulacao-row"><span>Total de Juros:</span><strong id="total-juros">MT 0,00</strong></div>
+                    <div class="simulacao-row">
+                        <span>Valor da Parcela:</span>
+                        <strong id="valor-parcela">MT 0,00</strong>
+                    </div>
+                    <div class="simulacao-row">
+                        <span>Total a Pagar:</span>
+                        <strong id="total-pagar">MT 0,00</strong>
+                    </div>
+                    <div class="simulacao-row">
+                        <span>Total de Juros:</span>
+                        <strong id="total-juros">MT 0,00</strong>
+                    </div>
                 </div>
             </div>
+            
+            <!-- Ações -->
             <div class="form-actions">
-                <a href="{% url 'emprestimo' %}" class="btn-secondary"><i class="bi bi-arrow-left"></i> Cancelar</a>
-                <button type="submit" class="btn-primary" id="btn-submit"><i class="bi bi-check-circle"></i> Simular e Cadastrar</button>
+                <a href="{% url 'emprestimo' %}" class="btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Cancelar
+                </a>
+                <button type="submit" class="btn-primary" id="btn-submit">
+                    <i class="bi bi-check-circle"></i> {% if emprestimo %}Salvar Alterações{% else %}Simular e Cadastrar{% endif %}
+                </button>
             </div>
         </form>
     </div>
 </div>
+
+<!-- Flatpickr para calendários estilizados -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // ============================================
+    // INICIALIZAR CALENDÁRIO COM FLATPICKR
+    // ============================================
+    
+    flatpickr('#data_primeiro_vencimento', {
+        locale: 'pt',
+        dateFormat: 'Y-m-d',
+        allowInput: false,
+        disableMobile: true,
+        weekNumbers: true,
+        position: 'auto',
+        animate: true,
+        minDate: 'today',
+        placeholder: 'Selecione a data do primeiro vencimento',
+    });
+
+    // ============================================
+    // FORMATAÇÃO DE MOEDA
+    // ============================================
+    
+    const valorInput = document.getElementById('valor');
+    
+    valorInput.addEventListener('input', function(e) {
+        let value = this.value.replace(/[^\d,]/g, '');
+        if (value) {
+            // Separar centavos
+            let parts = value.split(',');
+            let intPart = parts[0];
+            let decPart = parts[1] || '';
+            
+            // Formatar parte inteira com separadores de milhar
+            intPart = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            
+            // Limitar a 2 casas decimais
+            decPart = decPart.slice(0, 2);
+            
+            this.value = intPart + (decPart ? ',' + decPart : '');
+        }
+    });
+
+    // ============================================
+    // SIMULAÇÃO EM TEMPO REAL
+    // ============================================
+    
+    const valorParcelaEl = document.getElementById('valor-parcela');
+    const totalPagarEl = document.getElementById('total-pagar');
+    const totalJurosEl = document.getElementById('total-juros');
+    const simulacaoCard = document.getElementById('simulacao-card');
+    
+    const clienteSelect = document.getElementById('cliente');
+    const taxaJurosInput = document.getElementById('taxa_juros');
+    const quantidadeParcelasInput = document.getElementById('quantidade_parcelas');
+    const tipoJurosSelect = document.getElementById('tipo_juros');
+    const dataVencimentoInput = document.getElementById('data_primeiro_vencimento');
+    
+    function formatarMoeda(valor) {
+        return 'MT ' + valor.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    }
+    
+    function calcularSimulacao() {
+        const valorText = valorInput.value.replace(/\./g, '').replace(',', '.');
+        const valor = parseFloat(valorText);
+        const taxa = parseFloat(taxaJurosInput.value) / 100;
+        const parcelas = parseInt(quantidadeParcelasInput.value);
+        const tipo = tipoJurosSelect.value;
+        
+        if (!valor || isNaN(valor) || valor <= 0) return;
+        if (!taxa || isNaN(taxa) || taxa < 0) return;
+        if (!parcelas || isNaN(parcelas) || parcelas < 1) return;
+        
+        let valorParcela, totalPagar, totalJuros;
+        
+        if (tipo === 'simples') {
+            // Juros Simples: J = C * i * t
+            const jurosTotal = valor * taxa * parcelas;
+            totalPagar = valor + jurosTotal;
+            valorParcela = totalPagar / parcelas;
+        } else {
+            // Juros Compostos (PRICE)
+            if (taxa === 0) {
+                valorParcela = valor / parcelas;
+                totalPagar = valor;
+            } else {
+                const fator = Math.pow(1 + taxa, parcelas);
+                valorParcela = valor * (taxa * fator) / (fator - 1);
+                totalPagar = valorParcela * parcelas;
+            }
+        }
+        
+        totalJuros = totalPagar - valor;
+        
+        // Exibir resultados
+        valorParcelaEl.textContent = formatarMoeda(valorParcela);
+        totalPagarEl.textContent = formatarMoeda(totalPagar);
+        totalJurosEl.textContent = formatarMoeda(totalJuros);
+        
+        simulacaoCard.style.display = 'block';
+    }
+    
+    // Eventos para recalcular simulação
+    valorInput.addEventListener('input', calcularSimulacao);
+    taxaJurosInput.addEventListener('input', calcularSimulacao);
+    quantidadeParcelasInput.addEventListener('input', calcularSimulacao);
+    tipoJurosSelect.addEventListener('change', calcularSimulacao);
+    dataVencimentoInput.addEventListener('change', calcularSimulacao);
+    
+    // ============================================
+    // VALIDAÇÃO DO FORMULÁRIO
+    // ============================================
+    
+    const form = document.getElementById('formEmprestimo');
+    
+    form.addEventListener('submit', function(e) {
+        let isValid = true;
+        let primeiroErro = null;
+        
+        // Validar Cliente
+        if (!clienteSelect.value) {
+            document.getElementById('cliente-error').classList.add('show');
+            clienteSelect.classList.add('documento-invalido');
+            isValid = false;
+            if (!primeiroErro) primeiroErro = clienteSelect;
+        } else {
+            document.getElementById('cliente-error').classList.remove('show');
+            clienteSelect.classList.remove('documento-invalido');
+        }
+        
+        // Validar Valor
+        const valorText = valorInput.value.replace(/\./g, '').replace(',', '.');
+        const valor = parseFloat(valorText);
+        if (!valorInput.value || isNaN(valor) || valor <= 0) {
+            document.getElementById('valor-error').classList.add('show');
+            valorInput.classList.add('documento-invalido');
+            isValid = false;
+            if (!primeiroErro) primeiroErro = valorInput;
+        } else {
+            document.getElementById('valor-error').classList.remove('show');
+            valorInput.classList.remove('documento-invalido');
+        }
+        
+        // Validar Taxa de Juros
+        const taxa = parseFloat(taxaJurosInput.value);
+        if (!taxaJurosInput.value || isNaN(taxa) || taxa < 0) {
+            document.getElementById('taxa_juros-error').classList.add('show');
+            taxaJurosInput.classList.add('documento-invalido');
+            isValid = false;
+            if (!primeiroErro) primeiroErro = taxaJurosInput;
+        } else {
+            document.getElementById('taxa_juros-error').classList.remove('show');
+            taxaJurosInput.classList.remove('documento-invalido');
+        }
+        
+        // Validar Quantidade de Parcelas
+        const parcelas = parseInt(quantidadeParcelasInput.value);
+        if (!quantidadeParcelasInput.value || isNaN(parcelas) || parcelas < 1 || parcelas > 60) {
+            document.getElementById('quantidade_parcelas-error').classList.add('show');
+            quantidadeParcelasInput.classList.add('documento-invalido');
+            isValid = false;
+            if (!primeiroErro) primeiroErro = quantidadeParcelasInput;
+        } else {
+            document.getElementById('quantidade_parcelas-error').classList.remove('show');
+            quantidadeParcelasInput.classList.remove('documento-invalido');
+        }
+        
+        // Validar Data de Vencimento
+        if (!dataVencimentoInput.value) {
+            document.getElementById('data_primeiro_vencimento-error').classList.add('show');
+            dataVencimentoInput.classList.add('documento-invalido');
+            isValid = false;
+            if (!primeiroErro) primeiroErro = dataVencimentoInput;
+        } else {
+            document.getElementById('data_primeiro_vencimento-error').classList.remove('show');
+            dataVencimentoInput.classList.remove('documento-invalido');
+        }
+        
+        if (!isValid) {
+            e.preventDefault();
+            if (primeiroErro) {
+                primeiroErro.focus();
+                primeiroErro.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+    });
+    
+    // Remover mensagens de erro ao digitar
+    document.querySelectorAll('input, select').forEach(el => {
+        el.addEventListener('input', function() {
+            this.classList.remove('documento-invalido');
+            const errorId = this.id + '-error';
+            const errorEl = document.getElementById(errorId);
+            if (errorEl) {
+                errorEl.classList.remove('show');
+            }
+        });
+        el.addEventListener('change', function() {
+            this.classList.remove('documento-invalido');
+            const errorId = this.id + '-error';
+            const errorEl = document.getElementById(errorId);
+            if (errorEl) {
+                errorEl.classList.remove('show');
+            }
+        });
+    });
+    
+    // Executar simulação inicial se houver dados
+    if (valorInput.value || taxaJurosInput.value || quantidadeParcelasInput.value) {
+        calcularSimulacao();
+    }
+});
+</script>
+
 <script src="{% static 'javascript/emprestimos.js' %}"></script>
 {% endblock %}

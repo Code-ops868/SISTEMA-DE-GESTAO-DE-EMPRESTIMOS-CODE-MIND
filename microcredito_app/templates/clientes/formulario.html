@@ -5,6 +5,77 @@
 
 {% block page_css %}
 <link rel="stylesheet" href="{% static 'css/clientes.css' %}">
+<!-- Flatpickr para calendários estilizados -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
+<style>
+    /* Estilos para os calendários Flatpickr */
+    .flatpickr-calendar {
+        background: #0d1117 !important;
+        border: 1px solid rgba(56, 139, 253, 0.3) !important;
+        border-radius: 12px !important;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6) !important;
+    }
+    .flatpickr-calendar .flatpickr-day {
+        color: #e6edf3 !important;
+    }
+    .flatpickr-calendar .flatpickr-day.selected {
+        background: #88ff66 !important;
+        color: #0a0c10 !important;
+        border-color: #88ff66 !important;
+    }
+    .flatpickr-calendar .flatpickr-day:hover {
+        background: rgba(136, 255, 102, 0.2) !important;
+    }
+    .flatpickr-calendar .flatpickr-day.today {
+        border-color: #88ff66 !important;
+    }
+    .flatpickr-calendar .flatpickr-day.inRange {
+        background: rgba(136, 255, 102, 0.1) !important;
+    }
+    .flatpickr-calendar .flatpickr-day.disabled {
+        color: rgba(230, 237, 243, 0.3) !important;
+    }
+    .flatpickr-calendar .flatpickr-month {
+        color: #e6edf3 !important;
+    }
+    .flatpickr-calendar .flatpickr-weekday {
+        color: #88ff66 !important;
+    }
+    .flatpickr-calendar .flatpickr-prev-month svg,
+    .flatpickr-calendar .flatpickr-next-month svg {
+        fill: #88ff66 !important;
+    }
+    .flatpickr-calendar .flatpickr-prev-month:hover svg,
+    .flatpickr-calendar .flatpickr-next-month:hover svg {
+        fill: #bbff88 !important;
+    }
+    .flatpickr-calendar .flatpickr-current-month .flatpickr-monthDropdown-months {
+        background: #0d1117 !important;
+        color: #e6edf3 !important;
+    }
+    .flatpickr-calendar .flatpickr-current-month input.cur-year {
+        color: #e6edf3 !important;
+    }
+    .flatpickr-calendar .flatpickr-time input {
+        color: #e6edf3 !important;
+    }
+    .flatpickr-calendar .flatpickr-time .flatpickr-am-pm {
+        color: #e6edf3 !important;
+    }
+    .flatpickr-calendar .flatpickr-time .numInputWrapper span.arrowUp:after {
+        border-bottom-color: #88ff66 !important;
+    }
+    .flatpickr-calendar .flatpickr-time .numInputWrapper span.arrowDown:after {
+        border-top-color: #88ff66 !important;
+    }
+    .flatpickr-input {
+        cursor: pointer !important;
+    }
+    .flatpickr-input:focus + .flatpickr-calendar {
+        display: block !important;
+    }
+</style>
 {% endblock %}
 
 {% block dashboard_content %}
@@ -80,10 +151,10 @@
                         </div>
                     </div>
                     
-                    <!-- BI/Passaporte -->
+                    <!-- BI/Passaporte/DIRE -->
                     <div class="form-group">
                         <label for="bi_passaporte">
-                            <i class="bi bi-pass"></i> BI/Passaporte <span class="badge-doc">Opcional</span>
+                            <i class="bi bi-pass"></i> BI/Passaporte/DIRE <span class="badge-doc">Opcional</span>
                         </label>
                         <div class="tipo-documento-select">
                             <button type="button" class="btn-doc" data-tipo="BI">BI</button>
@@ -91,16 +162,16 @@
                             <button type="button" class="btn-doc" data-tipo="DIRE">DIRE</button>
                         </div>
                         <input type="text" id="bi_passaporte" name="bi_passaporte" value="{{ cliente.bi_passaporte|default:'' }}" 
-                               placeholder="Ex: A123456 (BI) ou P123456 (Passaporte)" 
+                               placeholder="Ex: 1234567890123A (BI) ou MZ1234567 (Passaporte)" 
+                               maxlength="14"
                                autocomplete="off">
                         <div class="documento-info">
                             <i class="bi bi-info-circle"></i> 
-                            BI: Letra + 6 dígitos (ex: A123456) | 
-                            Passaporte: Letra + 7 dígitos (ex: P1234567) |
-                            DIRE: 8 dígitos (ex: 12345678)
+                            BI/DIRE: 13 dígitos + 1 letra (Módulo 23) | 
+                            Passaporte: MZ + 7 dígitos
                         </div>
                         <div class="error-feedback" id="bi-error">
-                            <i class="bi bi-exclamation-circle"></i> Formato de BI/Passaporte inválido.
+                            <i class="bi bi-exclamation-circle"></i> Formato inválido. Use BI/DIRE (13 dígitos + letra) ou Passaporte (MZ1234567).
                         </div>
                         <div class="valid-feedback" id="bi-valid">
                             <i class="bi bi-check-circle"></i> Documento válido.
@@ -114,8 +185,10 @@
                         <label for="data_emissao_documento">
                             <i class="bi bi-calendar-date"></i> Data de Emissão do Documento
                         </label>
-                        <input type="date" id="data_emissao_documento" name="data_emissao_documento" 
-                               value="{{ cliente.data_emissao_documento|date:'Y-m-d'|default:'' }}">
+                        <input type="text" id="data_emissao_documento" name="data_emissao_documento" 
+                               value="{{ cliente.data_emissao_documento|date:'Y-m-d'|default:'' }}"
+                               placeholder="Selecione a data de emissão"
+                               readonly>
                         <div class="documento-info">
                             <i class="bi bi-info-circle"></i> Data de emissão do documento de identificação
                         </div>
@@ -126,8 +199,10 @@
                         <label for="data_validade_documento">
                             <i class="bi bi-calendar-x"></i> Data de Validade do Documento
                         </label>
-                        <input type="date" id="data_validade_documento" name="data_validade_documento" 
-                               value="{{ cliente.data_validade_documento|date:'Y-m-d'|default:'' }}">
+                        <input type="text" id="data_validade_documento" name="data_validade_documento" 
+                               value="{{ cliente.data_validade_documento|date:'Y-m-d'|default:'' }}"
+                               placeholder="Selecione a data de validade"
+                               readonly>
                         <div class="documento-info">
                             <i class="bi bi-info-circle"></i> Data de validade do documento (se aplicável)
                         </div>
@@ -172,7 +247,10 @@
                     <label for="data_nascimento">
                         <i class="bi bi-calendar"></i> Data de Nascimento
                     </label>
-                    <input type="date" id="data_nascimento" name="data_nascimento" value="{{ cliente.data_nascimento|date:'Y-m-d'|default:'' }}">
+                    <input type="text" id="data_nascimento" name="data_nascimento" 
+                           value="{{ cliente.data_nascimento|date:'Y-m-d'|default:'' }}"
+                           placeholder="Selecione a data de nascimento"
+                           readonly>
                 </div>
             </div>
             
@@ -205,16 +283,68 @@
     </div>
 </div>
 
-<!-- JavaScript para validação -->
+<!-- Flatpickr para calendários estilizados -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Elementos
+    // ============================================
+    // INICIALIZAR CALENDÁRIOS COM FLATPICKR
+    // ============================================
+    
+    // Configuração padrão para os calendários
+    const configPadrao = {
+        locale: 'pt',
+        dateFormat: 'Y-m-d',
+        allowInput: false,
+        disableMobile: true,
+        weekNumbers: true,
+        position: 'auto',
+        animate: true,
+    };
+    
+    // Data de Emissão
+    flatpickr('#data_emissao_documento', {
+        ...configPadrao,
+        placeholder: 'Selecione a data de emissão',
+        maxDate: 'today',
+    });
+    
+    // Data de Validade
+    flatpickr('#data_validade_documento', {
+        ...configPadrao,
+        placeholder: 'Selecione a data de validade',
+        minDate: 'today',
+    });
+    
+    // Data de Nascimento
+    flatpickr('#data_nascimento', {
+        ...configPadrao,
+        placeholder: 'Selecione a data de nascimento',
+        maxDate: 'today',
+    });
+    
+    // ============================================
+    // VALIDAÇÃO DE DOCUMENTOS
+    // ============================================
+    
     const form = document.getElementById('cliente-form');
     const nuitInput = document.getElementById('nuit');
     const nuibInput = document.getElementById('nuib');
     const biInput = document.getElementById('bi_passaporte');
     const tipoDocumentoButtons = document.querySelectorAll('.tipo-documento-select .btn-doc');
-    const submitBtn = document.getElementById('submit-btn');
+    
+    // Função para calcular letra de controlo (Módulo 23)
+    function calcularLetraDocumento(numeros) {
+        const letras = 'ABCDEFGHJKLMNPQRSTVWXYZ';
+        let peso = 0;
+        for (let i = 0; i < numeros.length; i++) {
+            peso += parseInt(numeros[i]) * (i + 1);
+        }
+        const resto = peso % 23;
+        return resto === 0 ? 'Z' : letras[resto - 1];
+    }
     
     // Função para validar NUIT (9 dígitos numéricos)
     function validarNUIT(value) {
@@ -238,35 +368,43 @@ document.addEventListener('DOMContentLoaded', function() {
         return { valid: true, message: '' };
     }
     
-    // Função para validar BI (Letra + 6 dígitos) ou Passaporte (Letra + 7 dígitos) ou DIRE (8 dígitos)
-    function validarBI(value) {
+    // Função para validar BI/DIRE (13 dígitos + letra) ou Passaporte (MZ + 7 dígitos)
+    function validarDocumento(value) {
         if (!value) return { valid: true, message: '', tipo: null };
         const cleaned = value.trim().toUpperCase();
         if (cleaned.length === 0) return { valid: true, message: '', tipo: null };
         
-        // BI: Letra maiúscula + 6 dígitos (ex: A123456)
-        const biPattern = /^[A-Z][0-9]{6}$/;
-        // Passaporte: Letra maiúscula + 7 dígitos (ex: P1234567)
-        const passaportePattern = /^[A-Z][0-9]{7}$/;
-        // DIRE: 8 dígitos (ex: 12345678)
-        const direPattern = /^[0-9]{8}$/;
-        
-        if (biPattern.test(cleaned)) {
-            return { valid: true, message: '', tipo: 'BI' };
-        } else if (passaportePattern.test(cleaned)) {
-            return { valid: true, message: '', tipo: 'Passaporte' };
-        } else if (direPattern.test(cleaned)) {
-            return { valid: true, message: '', tipo: 'DIRE' };
-        } else {
-            return { 
-                valid: false, 
-                message: 'Formato inválido. Use: BI (A123456), Passaporte (P1234567) ou DIRE (12345678).',
-                tipo: null
-            };
+        // BI/DIRE: 13 dígitos + 1 letra (Módulo 23)
+        const match = cleaned.match(/^([0-9]{13})([A-Z])$/);
+        if (match) {
+            const numeros = match[1];
+            const letraInformada = match[2];
+            const letraEsperada = calcularLetraDocumento(numeros);
+            
+            if (letraInformada === letraEsperada) {
+                return { valid: true, message: '', tipo: 'BI/DIRE' };
+            } else {
+                return { 
+                    valid: false, 
+                    message: `Letra inválida. A letra correta é: ${letraEsperada}`,
+                    tipo: null
+                };
+            }
         }
+        
+        // Passaporte: MZ + 7 dígitos
+        if (/^MZ[0-9]{7}$/.test(cleaned)) {
+            return { valid: true, message: '', tipo: 'Passaporte' };
+        }
+        
+        return { 
+            valid: false, 
+            message: 'Formato inválido. Use BI/DIRE (13 dígitos + letra) ou Passaporte (MZ1234567)',
+            tipo: null
+        };
     }
     
-    // Função para limpar entrada (apenas dígitos para NUIT/NUIB)
+    // Limpar entrada (apenas dígitos para NUIT/NUIB)
     function limparEntrada(input) {
         if (!input) return;
         input.addEventListener('input', function() {
@@ -274,7 +412,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Limpar entradas numéricas
     limparEntrada(nuitInput);
     limparEntrada(nuibInput);
     
@@ -318,7 +455,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Validar BI/Passaporte em tempo real
     biInput.addEventListener('input', function() {
-        const result = validarBI(this.value);
+        const result = validarDocumento(this.value);
         const errorEl = document.getElementById('bi-error');
         const validEl = document.getElementById('bi-valid');
         this.classList.remove('documento-validado', 'documento-invalido');
@@ -332,7 +469,6 @@ document.addEventListener('DOMContentLoaded', function() {
         } else if (this.value && result.valid) {
             this.classList.add('documento-validado');
             validEl.classList.add('show');
-            // Atualizar placeholder com o tipo detectado
             if (result.tipo) {
                 this.setAttribute('data-tipo', result.tipo);
             }
@@ -345,11 +481,16 @@ document.addEventListener('DOMContentLoaded', function() {
             tipoDocumentoButtons.forEach(b => b.classList.remove('active'));
             this.classList.add('active');
             const tipo = this.dataset.tipo;
-            biInput.placeholder = tipo === 'BI' ? 'Ex: A123456' : 
-                                   tipo === 'Passaporte' ? 'Ex: P1234567' : 
-                                   'Ex: 12345678';
+            
+            if (tipo === 'BI') {
+                biInput.placeholder = 'Ex: 1234567890123A (13 dígitos + letra)';
+            } else if (tipo === 'Passaporte') {
+                biInput.placeholder = 'Ex: MZ1234567';
+            } else if (tipo === 'DIRE') {
+                biInput.placeholder = 'Ex: 1234567890123X (13 dígitos + letra)';
+            }
+            
             biInput.focus();
-            // Limpar validação anterior
             biInput.classList.remove('documento-validado', 'documento-invalido');
             document.getElementById('bi-error').classList.remove('show');
             document.getElementById('bi-valid').classList.remove('show');
@@ -410,7 +551,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         // Validar BI/Passaporte se preenchido
-        const biResult = validarBI(biInput.value);
+        const biResult = validarDocumento(biInput.value);
         const biError = document.getElementById('bi-error');
         if (biInput.value && !biResult.valid) {
             biError.textContent = '✕ ' + biResult.message;

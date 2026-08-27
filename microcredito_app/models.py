@@ -268,15 +268,16 @@ class Cliente(models.Model):
         db_index=True,
     )
     
+
+    #===================
     bi_passaporte = models.CharField(
-        max_length=20,
-        blank=True,
-        null=True,
+        max_length=14,
+        blank=True, null=True,
         verbose_name='BI/Passaporte',
-        help_text='BI (Letra+6 dígitos), Passaporte (Letra+7 dígitos) ou DIRE (8 dígitos)',
+        help_text='BI: 1234567890123A (13 dígitos + letra com Módulo 23) | Passaporte: MZ1234567 | DIRE: 1234567890123X (13 dígitos + letra)',
         db_index=True,
-    )
-    
+)
+    #====================
     data_emissao_documento = models.DateField(
         blank=True,
         null=True,

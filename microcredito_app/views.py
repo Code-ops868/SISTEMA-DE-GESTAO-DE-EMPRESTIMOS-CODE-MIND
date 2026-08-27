@@ -79,59 +79,103 @@ def validar_nuib(nuib):
         return False, 'NUIB deve ter exatamente 9 dígitos numéricos.'
     
     return True, None
-
-
+#=================NOVA FUNCAO==============================
+def validar_dire(dire):
+    """
+    Valida DIRE (Documento de Identificação de Residentes Estrangeiros)
+    Formato: 13 dígitos + 1 letra (Módulo 23)
+    """
+    if not dire:
+        return True, None
+    
+    dire = str(dire).strip().upper()
+    
+    # DIRE: 13 dígitos + 1 letra
+    match = re.match(r'^([0-9]{13})([A-Z])$', dire)
+    if not match:
+        return False, 'Formato: 13 dígitos + letra (ex: 1234567890123X)'
+    
+    numeros = match.group(1)
+    letra_informada = match.group(2)
+    
+    # Módulo 23
+    letras = 'ABCDEFGHJKLMNPQRSTVWXYZ'
+    peso = 0
+    for i, digito in enumerate(numeros):
+        peso += int(digito) * (i + 1)
+    
+    resto = peso % 23
+    letra_calculada = letras[resto - 1] if resto > 0 else 'Z'
+    
+    if letra_informada == letra_calculada:
+        return True, None
+    
+    return False, f'Letra inválida. Correta: {letra_calculada}'
+#==============================================================================================
 def validar_bi_passaporte(bi_passaporte):
     """
-    Valida BI (Bilhete de Identidade) ou Passaporte conforme legislação moçambicana
-    
-    Formatos válidos:
-    - BI: Uma letra maiúscula seguida de 6 dígitos (ex: A123456)
-    - Passaporte: Uma letra maiúscula seguida de 7 dígitos (ex: P1234567)
-    - DIRE: 8 dígitos numéricos (ex: 12345678)
+    Valida BI (Bilhete de Identidade) conforme legislação moçambicana
+    Formato: 13 dígitos + 1 letra (Módulo 23)
     """
     if not bi_passaporte:
         return True, None, None
     
-    bi_passaporte = str(bi_passaporte).strip().upper()
+    bi = str(bi_passaporte).strip().upper()
     
-    bi_pattern = r'^[A-Z][0-9]{6}$'
-    passaporte_pattern = r'^[A-Z][0-9]{7}$'
-    dire_pattern = r'^[0-9]{8}$'
+    # BI: 13 dígitos + 1 letra
+    match = re.match(r'^([0-9]{13})([A-Z])$', bi)
+    if not match:
+        return False, 'Formato: 13 dígitos + letra (ex: 1234567890123A)', None
     
-    if re.match(bi_pattern, bi_passaporte):
+    numeros = match.group(1)
+    letra_informada = match.group(2)
+    
+    # Módulo 23
+    letras = 'ABCDEFGHJKLMNPQRSTVWXYZ'
+    peso = 0
+    for i, digito in enumerate(numeros):
+        peso += int(digito) * (i + 1)
+    
+    resto = peso % 23
+    letra_calculada = letras[resto - 1] if resto > 0 else 'Z'
+    
+    if letra_informada == letra_calculada:
         return True, None, 'BI'
-    elif re.match(passaporte_pattern, bi_passaporte):
-        return True, None, 'Passaporte'
-    elif re.match(dire_pattern, bi_passaporte):
-        return True, None, 'DIRE'
-    else:
-        return False, 'Formato inválido. Use BI (A123456), Passaporte (P1234567) ou DIRE (12345678).', None
-
-
+    
+    return False, f'Letra inválida. Correta: {letra_calculada}', None
+#=============================================================================================
 def validar_documentos_cliente(data):
-    """
-    Valida todos os documentos do cliente
-    Retorna (is_valid, errors_dict)
-    """
     errors = {}
     is_valid = True
     
+    # NUIT
     nuit_valid, nuit_error = validar_nuit(data.get('nuit'))
     if not nuit_valid:
         errors['nuit'] = nuit_error
         is_valid = False
     
+    # NUIB
     nuib_valid, nuib_error = validar_nuib(data.get('nuib'))
     if not nuib_valid:
         errors['nuib'] = nuib_error
         is_valid = False
     
-    bi_valid, bi_error, bi_tipo = validar_bi_passaporte(data.get('bi_passaporte'))
-    if not bi_valid:
-        errors['bi_passaporte'] = bi_error
-        is_valid = False
+    # BI/Passaporte
+    bi = data.get('bi_passaporte')
+    if bi:
+        # Verificar se é DIRE
+        dire_valid, dire_error = validar_dire(bi)
+        if dire_valid:
+            # É um DIRE válido
+            pass
+        else:
+            # Tentar validar como BI
+            bi_valid, bi_error, bi_tipo = validar_bi_passaporte(bi)
+            if not bi_valid:
+                errors['bi_passaporte'] = bi_error
+                is_valid = False
     
+    # Validar datas
     data_emissao = data.get('data_emissao_documento')
     data_validade = data.get('data_validade_documento')
     
@@ -152,7 +196,7 @@ def validar_documentos_cliente(data):
                 is_valid = False
             
             if validade < date.today():
-                errors['data_validade_documento'] = 'O documento está vencido. Por favor, atualize os dados.'
+                errors['data_validade_documento'] = 'O documento está vencido.'
                 is_valid = False
                 
         except (ValueError, TypeError):
@@ -161,7 +205,7 @@ def validar_documentos_cliente(data):
     
     return is_valid, errors
 
-
+#==============================================================================================
 def verificar_documento_unico(model, campo, valor, usuario, excluir_id=None):
     """
     Verifica se um documento já está cadastrado para outro cliente
