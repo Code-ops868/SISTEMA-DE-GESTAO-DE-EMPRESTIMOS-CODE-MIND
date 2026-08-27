@@ -370,39 +370,44 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Função para validar BI/DIRE (13 dígitos + letra) ou Passaporte (MZ + 7 dígitos)
     function validarDocumento(value) {
-        if (!value) return { valid: true, message: '', tipo: null };
-        const cleaned = value.trim().toUpperCase();
-        if (cleaned.length === 0) return { valid: true, message: '', tipo: null };
-        
-        // BI/DIRE: 13 dígitos + 1 letra (Módulo 23)
-        const match = cleaned.match(/^([0-9]{13})([A-Z])$/);
-        if (match) {
-            const numeros = match[1];
-            const letraInformada = match[2];
-            const letraEsperada = calcularLetraDocumento(numeros);
-            
-            if (letraInformada === letraEsperada) {
-                return { valid: true, message: '', tipo: 'BI/DIRE' };
-            } else {
-                return { 
-                    valid: false, 
-                    message: `Letra inválida. A letra correta é: ${letraEsperada}`,
-                    tipo: null
-                };
-            }
-        }
-        
-        // Passaporte: MZ + 7 dígitos
-        if (/^MZ[0-9]{7}$/.test(cleaned)) {
-            return { valid: true, message: '', tipo: 'Passaporte' };
-        }
-        
+    if (!value) return { valid: true, message: '', tipo: null };
+    
+    // Remove espaços e converte para maiúsculas
+    const cleaned = value.replace(/\s/g, '').toUpperCase();
+    if (cleaned.length === 0) return { valid: true, message: '', tipo: null };
+    
+    // BI: 13 dígitos + 1 letra
+    const match = cleaned.match(/^([0-9]{13})([A-Z])$/);
+    if (!match) {
         return { 
             valid: false, 
-            message: 'Formato inválido. Use BI/DIRE (13 dígitos + letra) ou Passaporte (MZ1234567)',
-            tipo: null
+            message: '✕ Use 13 dígitos + letra (ex: 031123456789B)',
+            tipo: null 
         };
     }
+    
+    const numeros = match[1];
+    const letraInformada = match[2];
+    
+    // Módulo 23
+    const letras = 'ABCDEFGHJKLMNPQRSTVWXYZ';
+    let peso = 0;
+    for (let i = 0; i < numeros.length; i++) {
+        peso += parseInt(numeros[i]) * (i + 1);
+    }
+    const resto = peso % 23;
+    const letraEsperada = resto === 0 ? 'Z' : letras[resto - 1];
+    
+    if (letraInformada === letraEsperada) {
+        return { valid: true, message: '', tipo: 'BI' };
+    }
+    
+    return { 
+        valid: false, 
+        message: `✕ Letra correta: ${letraEsperada}`,
+        tipo: null 
+    };
+}
     
     // Limpar entrada (apenas dígitos para NUIT/NUIB)
     function limparEntrada(input) {

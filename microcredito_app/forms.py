@@ -220,37 +220,36 @@ class ClienteForm(forms.ModelForm):
         return nuib
     #=====================================================================
     def clean_bi_passaporte(self):
-        """Valida BI ou DIRE com Módulo 23"""
-        bi = self.cleaned_data.get('bi_passaporte')
-        if bi:
-            bi = bi.strip().upper()
+    """Valida BI: 13 dígitos + letra (Módulo 23)"""
+    bi = self.cleaned_data.get('bi_passaporte')
+    if bi:
+        bi = bi.strip().upper()
+        
+        # BI: 13 dígitos + 1 letra
+        match = re.match(r'^([0-9]{13})([A-Z])$', bi)
+        if match:
+            numeros = match.group(1)
+            letra_informada = match.group(2)
             
-            # Verificar se é BI ou DIRE (ambos 13 dígitos + letra)
             letras = 'ABCDEFGHJKLMNPQRSTVWXYZ'
-            match = re.match(r'^([0-9]{13})([A-Z])$', bi)
-            if match:
-                numeros = match.group(1)
-                letra_informada = match.group(2)
-                
-                peso = 0
-                for i, digito in enumerate(numeros):
-                    peso += int(digito) * (i + 1)
-                
-                resto = peso % 23
-                letra_calculada = letras[resto - 1] if resto > 0 else 'Z'
-                
-                if letra_informada != letra_calculada:
-                    raise ValidationError(f'Documento inválido. Letra correta: {letra_calculada}')
-            else:
-                # Verificar se é Passaporte
-                if not re.match(r'^MZ[0-9]{7}$', bi):
-                    raise ValidationError('Formato inválido. Use BI/DIRE (13 dígitos + letra) ou Passaporte (MZ1234567)')
+            peso = 0
+            for i, digito in enumerate(numeros):
+                peso += int(digito) * (i + 1)
             
-            # Verificar duplicidade
-            cliente_id = self.instance.id if self.instance else None
-            if Cliente.objects.filter(bi_passaporte=bi).exclude(id=cliente_id).exists():
-                raise ValidationError('Documento já cadastrado para outro cliente.')
-        return bi
+            resto = peso % 23
+            letra_calculada = letras[resto - 1] if resto > 0 else 'Z'
+            
+            if letra_informada != letra_calculada:
+                raise ValidationError(f'BI inválido. Letra correta: {letra_calculada}')
+        else:
+            raise ValidationError('Formato: 13 dígitos + letra (ex: 031123456789B)')
+        
+        # Verificar duplicidade
+        cliente_id = self.instance.id if self.instance else None
+        if Cliente.objects.filter(bi_passaporte=bi).exclude(id=cliente_id).exists():
+            raise ValidationError('BI já cadastrado para outro cliente.')
+    return bi
+    
     #=========================================================================
     def clean(self):
         """Validação cruzada dos campos"""

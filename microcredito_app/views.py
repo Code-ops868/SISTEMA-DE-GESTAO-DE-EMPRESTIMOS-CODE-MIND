@@ -114,8 +114,7 @@ def validar_dire(dire):
 #==============================================================================================
 def validar_bi_passaporte(bi_passaporte):
     """
-    Valida BI (Bilhete de Identidade) conforme legislação moçambicana
-    Formato: 13 dígitos + 1 letra (Módulo 23)
+    Valida BI Moçambicano: 13 dígitos + letra (Módulo 23)
     """
     if not bi_passaporte:
         return True, None, None
@@ -125,7 +124,7 @@ def validar_bi_passaporte(bi_passaporte):
     # BI: 13 dígitos + 1 letra
     match = re.match(r'^([0-9]{13})([A-Z])$', bi)
     if not match:
-        return False, 'Formato: 13 dígitos + letra (ex: 1234567890123A)', None
+        return False, 'Formato: 13 dígitos + letra (ex: 031123456789B)', None
     
     numeros = match.group(1)
     letra_informada = match.group(2)
