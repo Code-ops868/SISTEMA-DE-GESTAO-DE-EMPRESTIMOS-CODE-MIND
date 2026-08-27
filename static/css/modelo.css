@@ -299,3 +299,179 @@ main .container {
         padding: 0.25rem 0.6rem;
     }
 }
+/* ============================================ */
+/* RESPONSIVIDADE PARA SMARTPHONES */
+/* ============================================ */
+
+/* Telas pequenas (smartphones) */
+@media (max-width: 768px) {
+    /* Container principal */
+    .container {
+        padding-left: 12px !important;
+        padding-right: 12px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    
+    /* Dashboard wrapper */
+    .dashboard-wrapper {
+        padding-left: 8px !important;
+        padding-right: 8px !important;
+        width: 100% !important;
+    }
+    
+    /* Conteúdo principal */
+    .main-content {
+        padding-left: 8px !important;
+        padding-right: 8px !important;
+        width: 100% !important;
+    }
+    
+    /* Cards e containers internos */
+    .clientes-container,
+    .emprestimos-container,
+    .cliente-form-container,
+    .emprestimo-form-container {
+        padding-left: 6px !important;
+        padding-right: 6px !important;
+        width: 100% !important;
+    }
+    
+    .clientes-table-card,
+    .emprestimos-table-card,
+    .cliente-form-card,
+    .emprestimo-form-card {
+        padding-left: 8px !important;
+        padding-right: 8px !important;
+        width: 100% !important;
+        border-radius: 12px !important;
+    }
+    
+    /* Tabelas */
+    .data-table {
+        font-size: 0.75rem !important;
+    }
+    
+    .data-table th,
+    .data-table td {
+        padding: 6px 8px !important;
+        white-space: nowrap !important;
+    }
+    
+    /* Filtros - empilhar em coluna */
+    .filtros-row {
+        grid-template-columns: 1fr !important;
+        gap: 8px !important;
+    }
+    
+    .filtro-actions {
+        flex-direction: column !important;
+        gap: 6px !important;
+    }
+    
+    .filtro-actions .btn-primary,
+    .filtro-actions .btn-secondary {
+        width: 100% !important;
+        justify-content: center !important;
+    }
+    
+    /* Formulários - empilhar em coluna */
+    .form-row {
+        grid-template-columns: 1fr !important;
+        gap: 8px !important;
+    }
+    
+    /* Ações dos formulários */
+    .form-actions {
+        flex-direction: column !important;
+        gap: 8px !important;
+    }
+    
+    .form-actions .btn-primary,
+    .form-actions .btn-secondary {
+        width: 100% !important;
+        justify-content: center !important;
+    }
+    
+    /* Botões em geral */
+    .btn-primary,
+    .btn-secondary {
+        width: 100% !important;
+        justify-content: center !important;
+    }
+    
+    /* Badges */
+    .badge {
+        font-size: 0.65rem !important;
+        padding: 3px 8px !important;
+    }
+    
+    /* Títulos */
+    .clientes-title,
+    .emprestimos-title {
+        font-size: 1.3rem !important;
+    }
+    
+    .clientes-subtitle,
+    .emprestimos-subtitle {
+        font-size: 0.8rem !important;
+    }
+    
+    /* Sidebar */
+    .sidebar {
+        width: 280px !important;
+        left: -290px !important;
+    }
+    
+    .sidebar.open {
+        left: 0 !important;
+    }
+    
+    /* Menu toggle */
+    .menu-toggle {
+        display: flex !important;
+    }
+    
+    /* Simulação card */
+    .simulacao-card {
+        padding: 12px !important;
+    }
+    
+    .simulacao-row {
+        font-size: 0.85rem !important;
+    }
+}
+
+/* Telas muito pequenas (até 480px) */
+@media (max-width: 480px) {
+    .container {
+        padding-left: 6px !important;
+        padding-right: 6px !important;
+    }
+    
+    .data-table {
+        font-size: 0.65rem !important;
+    }
+    
+    .data-table th,
+    .data-table td {
+        padding: 4px 5px !important;
+        font-size: 0.6rem !important;
+    }
+    
+    .badge {
+        font-size: 0.55rem !important;
+        padding: 2px 5px !important;
+    }
+    
+    .btn-primary,
+    .btn-secondary {
+        font-size: 0.8rem !important;
+        padding: 0.5rem 1rem !important;
+    }
+    
+    .form-control {
+        font-size: 0.85rem !important;
+        padding: 0.5rem 0.75rem !important;
+    }
+}
