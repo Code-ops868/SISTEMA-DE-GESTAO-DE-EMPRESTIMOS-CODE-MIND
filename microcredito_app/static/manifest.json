@@ -1,10 +1,10 @@
 ﻿{
-    "name": "Gestão de Empréstimos - CODE-MIND",
-    "short_name": "CODE-MIND",
+    "name": "Gestão de Empréstimos",
+    "short_name": "Gestão",
     "description": "Sistema de Gestão de Empréstimos e Microcrédito",
     "start_url": "/",
     "display": "standalone",
-    "background_color": "#FFFFFF",
+    "background_color": "#0a0c10",
     "theme_color": "#0a0c10",
     "orientation": "portrait",
     "categories": ["finance", "business"],
