@@ -1,6 +1,6 @@
 ﻿{
-    "name": "Gestão de Empréstimos",
-    "short_name": "Gestão",
+    "name": "CODE-MIND",
+    "short_name": "CODE-MIND",
     "description": "Sistema de Gestão de Empréstimos e Microcrédito",
     "start_url": "/",
     "display": "standalone",
