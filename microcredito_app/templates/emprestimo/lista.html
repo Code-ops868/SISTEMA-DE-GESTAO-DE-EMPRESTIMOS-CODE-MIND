@@ -1,14 +1,49 @@
-{% extends "modelo.html" %}
+{% extends "core/dashboard_base.html" %}
 {% load static %}
 
-{% block title %}Empréstimos - CODE-MIND{% endblock %}
+{% block title %}Empréstimos - CODEMIND{% endblock %}
 
-{% block extra_head %}
+{% block page_css %}
 <link rel="stylesheet" href="{% static 'datatables/css/dataTables.bootstrap5.min.css' %}">
 <link rel="stylesheet" href="{% static 'css/emprestimos.css' %}">
+<!-- Flatpickr para calendários estilizados -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<style>
+    .flatpickr-calendar {
+        background: #0d1117 !important;
+        border: 1px solid rgba(56, 139, 253, 0.3) !important;
+        border-radius: 12px !important;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6) !important;
+    }
+    .flatpickr-calendar .flatpickr-day {
+        color: #e6edf3 !important;
+    }
+    .flatpickr-calendar .flatpickr-day.selected {
+        background: #88ff66 !important;
+        color: #0a0c10 !important;
+        border-color: #88ff66 !important;
+    }
+    .flatpickr-calendar .flatpickr-day:hover {
+        background: rgba(136, 255, 102, 0.15) !important;
+    }
+    .flatpickr-calendar .flatpickr-weekday {
+        color: #88ff66 !important;
+    }
+    .flatpickr-input {
+        cursor: pointer !important;
+        background-color: rgba(13, 17, 23, 0.8) !important;
+        color: #e6edf3 !important;
+        border: 1px solid rgba(56, 139, 253, 0.25) !important;
+        border-radius: 10px !important;
+        padding: 0.7rem 1rem !important;
+        width: 100% !important;
+        font-size: 0.92rem !important;
+        height: 44px !important;
+    }
+</style>
 {% endblock %}
 
-{% block content %}
+{% block dashboard_content %}
 <div class="emprestimos-container">
     <div class="emprestimos-header">
         <div>
@@ -28,9 +63,9 @@
                     <label for="status">Status</label>
                     <select name="status" id="status" class="form-control">
                         <option value="">Todos</option>
-                        <option value="ativo">Ativo</option>
-                        <option value="pago">Pago</option>
-                        <option value="atrasado">Atrasado</option>
+                        <option value="ativo" {% if request.GET.status == 'ativo' %}selected{% endif %}>Ativo</option>
+                        <option value="pago" {% if request.GET.status == 'pago' %}selected{% endif %}>Pago</option>
+                        <option value="atrasado" {% if request.GET.status == 'atrasado' %}selected{% endif %}>Atrasado</option>
                     </select>
                 </div>
                 <div class="filtro-group">
@@ -38,17 +73,21 @@
                     <select name="cliente" id="cliente" class="form-control">
                         <option value="">Todos</option>
                         {% for cliente in clientes %}
-                        <option value="{{ cliente.id }}">{{ cliente.nome }}</option>
+                        <option value="{{ cliente.id }}" {% if request.GET.cliente == cliente.id|stringformat:"s" %}selected{% endif %}>
+                            {{ cliente.nome }}
+                        </option>
                         {% endfor %}
                     </select>
                 </div>
                 <div class="filtro-group">
                     <label for="data_inicio">Data Início</label>
-                    <input type="date" name="data_inicio" id="data_inicio" class="form-control">
+                    <!-- ✅ CORRIGIDO: type="text" com Flatpickr -->
+                    <input type="text" name="data_inicio" id="data_inicio" class="form-control" value="{{ request.GET.data_inicio }}" placeholder="Selecione a data">
                 </div>
                 <div class="filtro-group">
                     <label for="data_fim">Data Fim</label>
-                    <input type="date" name="data_fim" id="data_fim" class="form-control">
+                    <!-- ✅ CORRIGIDO: type="text" com Flatpickr -->
+                    <input type="text" name="data_fim" id="data_fim" class="form-control" value="{{ request.GET.data_fim }}" placeholder="Selecione a data">
                 </div>
                 <div class="filtro-actions">
                     <button type="submit" class="btn-primary btn-sm"><i class="bi bi-search"></i> Filtrar</button>
@@ -76,7 +115,7 @@
                 </thead>
                 <tbody>
                     {% for emp in emprestimos %}
-                    <tr class="{% if emp.status == 'atrasado' %}table-danger{% endif %}">
+                    <tr>
                         <td>{{ emp.id }}</td>
                         <td><strong>{{ emp.cliente.nome }}</strong></td>
                         <td>MT {{ emp.valor|floatformat:2 }}</td>
@@ -84,24 +123,29 @@
                         <td class="text-center">{{ emp.quantidade_parcelas }}x</td>
                         <td class="text-success fw-bold">MT {{ emp.valor_parcela|floatformat:2 }}</td>
                         <td>
-                            <span class="badge {% if emp.status == 'ativo' %}bg-success{% elif emp.status == 'atrasado' %}bg-danger{% else %}bg-secondary{% endif %}">
+                            <span class="badge {% if emp.status == 'ativo' %}badge-success{% elif emp.status == 'atrasado' %}badge-danger{% else %}badge-secondary{% endif %}">
                                 {{ emp.get_status_display }}
                             </span>
                         </td>
                         <td>{{ emp.data_contrato|date:"d/m/Y" }}</td>
                         <td class="actions text-center">
-                           
+                            <a href="{% url 'emprestimo_parcelas' emp.id %}" class="btn btn-sm btn-outline-primary" title="Ver Parcelas">
+                                <i class="bi bi-list-ul"></i>
+                            </a>
                             <button class="btn btn-sm btn-outline-success" onclick="baixarEmprestimo({{ emp.id }})" title="Baixar Empréstimo">
                                 <i class="bi bi-cash-stack"></i>
                             </button>
                         </td>
                     </tr>
                     {% empty %}
-                    <tr>
-                        <td colspan="9" class="empty-state text-center py-5">
-                            <i class="bi bi-calculator fs-1"></i>
-                            <p>Nenhum empréstimo cadastrado</p>
-                            <a href="{% url 'emprestimo_cadastrar' %}" class="btn btn-primary">Cadastrar primeiro empréstimo</a>
+                    <!-- ✅ CORRIGIDO: Classe no TR -->
+                    <tr class="empty-state-row">
+                        <td colspan="9" class="text-center py-5">
+                            <i class="bi bi-calculator fs-1 d-block mb-3" style="color: #88ff66;"></i>
+                            <p style="color: #8b949e;">Nenhum empréstimo cadastrado</p>
+                            <a href="{% url 'emprestimo_cadastrar' %}" class="btn-primary mt-3" style="display: inline-block;">
+                                <i class="bi bi-plus-circle-fill"></i> Cadastrar primeiro empréstimo
+                            </a>
                         </td>
                     </tr>
                     {% endfor %}
@@ -111,34 +155,87 @@
     </div>
 </div>
 
-<!-- SCRIPTS LOCAIS (SEM CDN) -->
 <script src="{% static 'javascript/jquery-3.7.0.min.js' %}"></script>
 <script src="{% static 'datatables/js/jquery.dataTables.min.js' %}"></script>
 <script src="{% static 'datatables/js/dataTables.bootstrap5.min.js' %}"></script>
 
+<!-- Flatpickr -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
+
 <script>
-// Aguardar o DOM carregar completamente
 document.addEventListener('DOMContentLoaded', function() {
-    // Verificar se jQuery está disponível
-    if (typeof jQuery !== 'undefined' && jQuery.fn && jQuery.fn.DataTable) {
-        jQuery('#emprestimos-table').DataTable({
+    // ============================================
+    // ✅ FLATPICKR PARA OS FILTROS DE DATA
+    // ============================================
+    
+    flatpickr('#data_inicio', {
+        locale: 'pt',
+        dateFormat: 'Y-m-d',
+        allowInput: false,
+        disableMobile: true,
+        placeholder: 'Selecione a data início',
+    });
+
+    flatpickr('#data_fim', {
+        locale: 'pt',
+        dateFormat: 'Y-m-d',
+        allowInput: false,
+        disableMobile: true,
+        placeholder: 'Selecione a data fim',
+    });
+
+    // ============================================
+    // ✅ DATATABLES - APENAS SE HOUVER DADOS
+    // ============================================
+    
+    const tabela = document.getElementById('emprestimos-table');
+    const tbody = tabela ? tabela.querySelector('tbody') : null;
+    const temDados = tbody && tbody.querySelector('tr:not(.empty-state-row)');
+
+    if (temDados && typeof jQuery !== 'undefined' && jQuery.fn.DataTable) {
+        $('#emprestimos-table').DataTable({
             language: {
-                // Usando arquivo LOCAL - SEM CDN
-                url: "{% static 'datatables/i18n/pt-BR.json' %}"
+                "sEmptyTable": "Nenhum empréstimo encontrado",
+                "sInfo": "Mostrando _START_ até _END_ de _TOTAL_ empréstimos",
+                "sInfoEmpty": "Mostrando 0 até 0 de 0 empréstimos",
+                "sInfoFiltered": "(filtrado de _MAX_ empréstimos no total)",
+                "sLengthMenu": "Mostrar _MENU_ empréstimos por página",
+                "sSearch": "Pesquisar:",
+                "oPaginate": {
+                    "sFirst": "Primeiro",
+                    "sLast": "Último",
+                    "sNext": "Seguinte",
+                    "sPrevious": "Anterior"
+                }
             },
             pageLength: 10,
             responsive: true,
-            order: [[0, 'desc']]
+            order: [[0, 'desc']],
+            columnDefs: [
+                { orderable: false, targets: 8 }
+            ]
         });
-        console.log('✅ DataTables inicializado com sucesso');
-    } else {
-        console.error('❌ jQuery ou DataTables não carregado');
     }
 });
 
 function baixarEmprestimo(id) {
-    if (confirm('Deseja marcar este empréstimo como pago? Todas as parcelas serão quitadas.')) {
-        window.location.href = `/emprestimos/baixar/${id}/`;
+    if (confirm('Deseja marcar este empréstimo como pago?')) {
+        fetch(`/emprestimos/baixar/${id}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || '',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                location.reload();
+            } else {
+                alert(data.error || 'Erro ao baixar empréstimo');
+            }
+        });
     }
 }
 </script>
