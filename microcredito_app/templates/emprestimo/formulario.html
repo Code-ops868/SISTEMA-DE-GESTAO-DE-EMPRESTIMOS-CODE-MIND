@@ -5,194 +5,8 @@
 
 {% block page_css %}
 <link rel="stylesheet" href="{% static 'css/emprestimos.css' %}">
-<!-- Flatpickr para calendários estilizados -->
+<!-- Flatpickr CSS básico (apenas o necessário) -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-<style>
-    /* ============================================
-       ESTILOS FLATPICKR - TEMA ESCURO PERSONALIZADO
-       ============================================ */
-    
-    /* Container do calendário */
-    .flatpickr-calendar {
-        background: #0d1117 !important;
-        border: 1px solid rgba(56, 139, 253, 0.3) !important;
-        border-radius: 12px !important;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6) !important;
-        width: 307px !important;
-        padding: 10px !important;
-    }
-    
-    /* Dias do calendário */
-    .flatpickr-calendar .flatpickr-day {
-        color: #e6edf3 !important;
-        border-radius: 8px !important;
-        font-weight: 500 !important;
-        transition: all 0.2s ease !important;
-        width: 36px !important;
-        height: 36px !important;
-        line-height: 36px !important;
-        margin: 2px !important;
-    }
-    
-    /* Dia selecionado */
-    .flatpickr-calendar .flatpickr-day.selected,
-    .flatpickr-calendar .flatpickr-day.selected:hover {
-        background: #88ff66 !important;
-        color: #0a0c10 !important;
-        border-color: #88ff66 !important;
-        font-weight: 700 !important;
-    }
-    
-    /* Dia em hover */
-    .flatpickr-calendar .flatpickr-day:hover {
-        background: rgba(136, 255, 102, 0.15) !important;
-        color: #88ff66 !important;
-        border-color: rgba(136, 255, 102, 0.3) !important;
-    }
-    
-    /* Dia atual (hoje) */
-    .flatpickr-calendar .flatpickr-day.today {
-        border-color: #88ff66 !important;
-        background: rgba(136, 255, 102, 0.08) !important;
-    }
-    
-    /* Dia em intervalo */
-    .flatpickr-calendar .flatpickr-day.inRange {
-        background: rgba(136, 255, 102, 0.1) !important;
-        border-color: rgba(136, 255, 102, 0.2) !important;
-    }
-    
-    /* Dias desabilitados */
-    .flatpickr-calendar .flatpickr-day.disabled,
-    .flatpickr-calendar .flatpickr-day.disabled:hover {
-        color: rgba(230, 237, 243, 0.2) !important;
-        background: transparent !important;
-        border-color: transparent !important;
-    }
-    
-    /* Cabeçalho do mês */
-    .flatpickr-calendar .flatpickr-month {
-        color: #e6edf3 !important;
-        margin-bottom: 8px !important;
-    }
-    
-    .flatpickr-calendar .flatpickr-current-month {
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        gap: 8px !important;
-        padding: 8px 0 !important;
-        font-size: 16px !important;
-        font-weight: 600 !important;
-        color: #e6edf3 !important;
-    }
-    
-    .flatpickr-calendar .flatpickr-current-month .flatpickr-monthDropdown-months {
-        background: #0d1117 !important;
-        color: #e6edf3 !important;
-        border: 1px solid rgba(56, 139, 253, 0.2) !important;
-        border-radius: 6px !important;
-        padding: 4px 8px !important;
-        font-weight: 600 !important;
-        cursor: pointer !important;
-    }
-    
-    .flatpickr-calendar .flatpickr-current-month input.cur-year {
-        color: #e6edf3 !important;
-        background: transparent !important;
-        font-weight: 600 !important;
-        width: 50px !important;
-        text-align: center !important;
-    }
-    
-    /* Dias da semana */
-    .flatpickr-calendar .flatpickr-weekday {
-        color: #88ff66 !important;
-        font-weight: 600 !important;
-        font-size: 12px !important;
-        text-transform: uppercase !important;
-        letter-spacing: 0.5px !important;
-        padding: 6px 0 !important;
-    }
-    
-    /* Navegação (setas) */
-    .flatpickr-calendar .flatpickr-prev-month,
-    .flatpickr-calendar .flatpickr-next-month {
-        padding: 8px !important;
-    }
-    
-    .flatpickr-calendar .flatpickr-prev-month svg,
-    .flatpickr-calendar .flatpickr-next-month svg {
-        fill: #88ff66 !important;
-        width: 14px !important;
-        height: 14px !important;
-        transition: all 0.2s ease !important;
-    }
-    
-    .flatpickr-calendar .flatpickr-prev-month:hover svg,
-    .flatpickr-calendar .flatpickr-next-month:hover svg {
-        fill: #bbff88 !important;
-        transform: scale(1.1) !important;
-    }
-    
-    /* Rodapé do calendário */
-    .flatpickr-calendar .flatpickr-weekdays {
-        border-bottom: 1px solid rgba(56, 139, 253, 0.1) !important;
-        padding-bottom: 4px !important;
-        margin-bottom: 4px !important;
-    }
-    
-    .flatpickr-calendar .flatpickr-days {
-        padding: 4px 0 !important;
-    }
-    
-    /* Input do calendário */
-    .flatpickr-input {
-        cursor: pointer !important;
-        background-color: rgba(13, 17, 23, 0.8) !important;
-        color: #e6edf3 !important;
-        border: 1px solid rgba(56, 139, 253, 0.25) !important;
-        border-radius: 10px !important;
-        padding: 0.7rem 1rem !important;
-        width: 100% !important;
-        font-size: 0.92rem !important;
-        transition: all 0.3s ease !important;
-        height: 44px !important;
-    }
-    
-    .flatpickr-input:hover {
-        border-color: rgba(56, 139, 253, 0.4) !important;
-    }
-    
-    .flatpickr-input:focus {
-        outline: none !important;
-        border-color: #88ff66 !important;
-        box-shadow: 0 0 0 3px rgba(136, 255, 102, 0.15) !important;
-    }
-    
-    .flatpickr-input::placeholder {
-        color: rgba(230, 237, 243, 0.3) !important;
-    }
-    
-    /* Remover fundo branco do dark.css */
-    .flatpickr-calendar.arrowTop:before,
-    .flatpickr-calendar.arrowTop:after {
-        display: none !important;
-    }
-    
-    /* Estilo para os botões de navegação */
-    .flatpickr-calendar .flatpickr-months {
-        display: flex !important;
-        justify-content: space-between !important;
-        align-items: center !important;
-        padding: 4px 0 !important;
-    }
-    
-    .flatpickr-calendar .flatpickr-months .flatpickr-month {
-        flex: 1 !important;
-        text-align: center !important;
-    }
-</style>
 {% endblock %}
 
 {% block dashboard_content %}
@@ -268,7 +82,7 @@
                 <!-- Data do Primeiro Vencimento -->
                 <div class="form-group">
                     <label for="data_primeiro_vencimento"><i class="bi bi-calendar"></i> Primeiro Vencimento <span class="campo-obrigatorio">*</span></label>
-                    <input type="text" id="data_primeiro_vencimento" name="data_primeiro_vencimento" class="form-control flatpickr-input" 
+                    <input type="text" id="data_primeiro_vencimento" name="data_primeiro_vencimento" class="form-control" 
                            placeholder="Selecione a data" 
                            value="{{ emprestimo.data_primeiro_vencimento|date:'Y-m-d'|default:'' }}"
                            readonly
@@ -327,14 +141,14 @@
     </div>
 </div>
 
-<!-- Flatpickr para calendários estilizados -->
+<!-- Flatpickr -->
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // ============================================
-    // INICIALIZAR CALENDÁRIO COM FLATPICKR
+    // INICIALIZAR CALENDÁRIO
     // ============================================
     
     flatpickr('#data_primeiro_vencimento', {
@@ -347,16 +161,6 @@ document.addEventListener('DOMContentLoaded', function() {
         animate: true,
         minDate: 'today',
         placeholder: 'Selecione a data do primeiro vencimento',
-        // Aplicar tema escuro
-        theme: 'dark',
-        // Configuração extra para garantir o estilo
-        onChange: function(selectedDates, dateStr, instance) {
-            // Forçar o calendário a ficar com o tema escuro
-            const calendar = instance.calendarContainer;
-            if (calendar) {
-                calendar.style.background = '#0d1117';
-            }
-        }
     });
 
     // ============================================
@@ -388,7 +192,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const totalJurosEl = document.getElementById('total-juros');
     const simulacaoCard = document.getElementById('simulacao-card');
     
-    const clienteSelect = document.getElementById('cliente');
     const taxaJurosInput = document.getElementById('taxa_juros');
     const quantidadeParcelasInput = document.getElementById('quantidade_parcelas');
     const tipoJurosSelect = document.getElementById('tipo_juros');
@@ -446,11 +249,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // ============================================
     
     const form = document.getElementById('formEmprestimo');
+    const clienteSelect = document.getElementById('cliente');
     
     form.addEventListener('submit', function(e) {
         let isValid = true;
         let primeiroErro = null;
         
+        // Validar Cliente
         if (!clienteSelect.value) {
             document.getElementById('cliente-error').classList.add('show');
             clienteSelect.classList.add('documento-invalido');
@@ -461,6 +266,7 @@ document.addEventListener('DOMContentLoaded', function() {
             clienteSelect.classList.remove('documento-invalido');
         }
         
+        // Validar Valor
         const valorText = valorInput.value.replace(/\./g, '').replace(',', '.');
         const valor = parseFloat(valorText);
         if (!valorInput.value || isNaN(valor) || valor <= 0) {
@@ -473,6 +279,7 @@ document.addEventListener('DOMContentLoaded', function() {
             valorInput.classList.remove('documento-invalido');
         }
         
+        // Validar Taxa de Juros
         const taxa = parseFloat(taxaJurosInput.value);
         if (!taxaJurosInput.value || isNaN(taxa) || taxa < 0) {
             document.getElementById('taxa_juros-error').classList.add('show');
@@ -484,6 +291,7 @@ document.addEventListener('DOMContentLoaded', function() {
             taxaJurosInput.classList.remove('documento-invalido');
         }
         
+        // Validar Quantidade de Parcelas
         const parcelas = parseInt(quantidadeParcelasInput.value);
         if (!quantidadeParcelasInput.value || isNaN(parcelas) || parcelas < 1 || parcelas > 60) {
             document.getElementById('quantidade_parcelas-error').classList.add('show');
@@ -495,6 +303,7 @@ document.addEventListener('DOMContentLoaded', function() {
             quantidadeParcelasInput.classList.remove('documento-invalido');
         }
         
+        // Validar Data de Vencimento
         if (!dataVencimentoInput.value) {
             document.getElementById('data_primeiro_vencimento-error').classList.add('show');
             dataVencimentoInput.classList.add('documento-invalido');
@@ -514,6 +323,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
+    // Remover mensagens de erro ao digitar
     document.querySelectorAll('input, select').forEach(el => {
         el.addEventListener('input', function() {
             this.classList.remove('documento-invalido');
@@ -533,6 +343,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
+    // Executar simulação inicial se houver dados
     if (valorInput.value || taxaJurosInput.value || quantidadeParcelasInput.value) {
         calcularSimulacao();
     }
