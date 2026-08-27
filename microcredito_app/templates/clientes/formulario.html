@@ -151,10 +151,10 @@
                         </div>
                     </div>
                     
-                    <!-- BI/Passaporte/DIRE -->
+                    <!-- BI/Passaporte -->
                     <div class="form-group">
                         <label for="bi_passaporte">
-                            <i class="bi bi-pass"></i> BI/Passaporte/DIRE <span class="badge-doc">Opcional</span>
+                            <i class="bi bi-pass"></i> BI/Passaporte <span class="badge-doc">Opcional</span>
                         </label>
                         <div class="tipo-documento-select">
                             <button type="button" class="btn-doc" data-tipo="BI">BI</button>
@@ -162,16 +162,16 @@
                             <button type="button" class="btn-doc" data-tipo="DIRE">DIRE</button>
                         </div>
                         <input type="text" id="bi_passaporte" name="bi_passaporte" value="{{ cliente.bi_passaporte|default:'' }}" 
-                               placeholder="Ex: 1234567890123A (BI) ou MZ1234567 (Passaporte)" 
+                               placeholder="Ex: 1234567890123A (13 dígitos + letra)" 
                                maxlength="14"
                                autocomplete="off">
                         <div class="documento-info">
                             <i class="bi bi-info-circle"></i> 
-                            BI/DIRE: 13 dígitos + 1 letra (Módulo 23) | 
-                            Passaporte: MZ + 7 dígitos
+                            BI/DIRE: 13 dígitos + letra (ex: 1234567890123A) | 
+                            Passaporte: MZ + 7 dígitos (ex: MZ1234567)
                         </div>
                         <div class="error-feedback" id="bi-error">
-                            <i class="bi bi-exclamation-circle"></i> Formato inválido. Use BI/DIRE (13 dígitos + letra) ou Passaporte (MZ1234567).
+                            <i class="bi bi-exclamation-circle"></i> Formato inválido.
                         </div>
                         <div class="valid-feedback" id="bi-valid">
                             <i class="bi bi-check-circle"></i> Documento válido.
@@ -293,7 +293,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // INICIALIZAR CALENDÁRIOS COM FLATPICKR
     // ============================================
     
-    // Configuração padrão para os calendários
     const configPadrao = {
         locale: 'pt',
         dateFormat: 'Y-m-d',
@@ -304,21 +303,18 @@ document.addEventListener('DOMContentLoaded', function() {
         animate: true,
     };
     
-    // Data de Emissão
     flatpickr('#data_emissao_documento', {
         ...configPadrao,
         placeholder: 'Selecione a data de emissão',
         maxDate: 'today',
     });
     
-    // Data de Validade
     flatpickr('#data_validade_documento', {
         ...configPadrao,
         placeholder: 'Selecione a data de validade',
         minDate: 'today',
     });
     
-    // Data de Nascimento
     flatpickr('#data_nascimento', {
         ...configPadrao,
         placeholder: 'Selecione a data de nascimento',
@@ -326,7 +322,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // ============================================
-    // VALIDAÇÃO DE DOCUMENTOS
+    // ELEMENTOS
     // ============================================
     
     const form = document.getElementById('cliente-form');
@@ -335,7 +331,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const biInput = document.getElementById('bi_passaporte');
     const tipoDocumentoButtons = document.querySelectorAll('.tipo-documento-select .btn-doc');
     
-    // Função para calcular letra de controlo (Módulo 23)
+    // ============================================
+    // FUNÇÃO PARA CALCULAR LETRA (MÓDULO 23)
+    // ============================================
+    
     function calcularLetraDocumento(numeros) {
         const letras = 'ABCDEFGHJKLMNPQRSTVWXYZ';
         let peso = 0;
@@ -346,7 +345,54 @@ document.addEventListener('DOMContentLoaded', function() {
         return resto === 0 ? 'Z' : letras[resto - 1];
     }
     
-    // Função para validar NUIT (9 dígitos numéricos)
+    // ============================================
+    // FUNÇÃO PARA VALIDAR DOCUMENTO
+    // ============================================
+    
+    function validarDocumento(value) {
+        if (!value) {
+            return { valid: true, message: '', tipo: null };
+        }
+        
+        const cleaned = value.replace(/\s/g, '').toUpperCase();
+        if (cleaned.length === 0) {
+            return { valid: true, message: '', tipo: null };
+        }
+        
+        // BI/DIRE: 13 dígitos + 1 letra (Módulo 23)
+        const match = cleaned.match(/^([0-9]{13})([A-Z])$/);
+        if (match) {
+            const numeros = match[1];
+            const letraInformada = match[2];
+            const letraEsperada = calcularLetraDocumento(numeros);
+            
+            if (letraInformada === letraEsperada) {
+                return { valid: true, message: '', tipo: 'BI/DIRE' };
+            } else {
+                return { 
+                    valid: false, 
+                    message: `Letra inválida. A letra correta é: ${letraEsperada}`,
+                    tipo: null
+                };
+            }
+        }
+        
+        // Passaporte: MZ + 7 dígitos
+        if (/^MZ[0-9]{7}$/.test(cleaned)) {
+            return { valid: true, message: '', tipo: 'Passaporte' };
+        }
+        
+        return { 
+            valid: false, 
+            message: 'Formato inválido. Use BI/DIRE (13 dígitos + letra) ou Passaporte (MZ1234567)',
+            tipo: null
+        };
+    }
+    
+    // ============================================
+    // FUNÇÃO PARA VALIDAR NUIT/NUIB
+    // ============================================
+    
     function validarNUIT(value) {
         if (!value) return { valid: true, message: '' };
         const cleaned = value.replace(/\D/g, '');
@@ -357,7 +403,6 @@ document.addEventListener('DOMContentLoaded', function() {
         return { valid: true, message: '' };
     }
     
-    // Função para validar NUIB (9 dígitos numéricos)
     function validarNUIB(value) {
         if (!value) return { valid: true, message: '' };
         const cleaned = value.replace(/\D/g, '');
@@ -368,48 +413,10 @@ document.addEventListener('DOMContentLoaded', function() {
         return { valid: true, message: '' };
     }
     
-    // Função para validar BI/DIRE (13 dígitos + letra) ou Passaporte (MZ + 7 dígitos)
-    function validarDocumento(value) {
-    if (!value) return { valid: true, message: '', tipo: null };
+    // ============================================
+    // LIMPAR ENTRADA (APENAS DÍGITOS)
+    // ============================================
     
-    // Remove espaços e converte para maiúsculas
-    const cleaned = value.replace(/\s/g, '').toUpperCase();
-    if (cleaned.length === 0) return { valid: true, message: '', tipo: null };
-    
-    // BI: 13 dígitos + 1 letra
-    const match = cleaned.match(/^([0-9]{13})([A-Z])$/);
-    if (!match) {
-        return { 
-            valid: false, 
-            message: '✕ Use 13 dígitos + letra (ex: 031123456789B)',
-            tipo: null 
-        };
-    }
-    
-    const numeros = match[1];
-    const letraInformada = match[2];
-    
-    // Módulo 23
-    const letras = 'ABCDEFGHJKLMNPQRSTVWXYZ';
-    let peso = 0;
-    for (let i = 0; i < numeros.length; i++) {
-        peso += parseInt(numeros[i]) * (i + 1);
-    }
-    const resto = peso % 23;
-    const letraEsperada = resto === 0 ? 'Z' : letras[resto - 1];
-    
-    if (letraInformada === letraEsperada) {
-        return { valid: true, message: '', tipo: 'BI' };
-    }
-    
-    return { 
-        valid: false, 
-        message: `✕ Letra correta: ${letraEsperada}`,
-        tipo: null 
-    };
-}
-    
-    // Limpar entrada (apenas dígitos para NUIT/NUIB)
     function limparEntrada(input) {
         if (!input) return;
         input.addEventListener('input', function() {
@@ -420,7 +427,10 @@ document.addEventListener('DOMContentLoaded', function() {
     limparEntrada(nuitInput);
     limparEntrada(nuibInput);
     
-    // Validar NUIT em tempo real
+    // ============================================
+    // VALIDAÇÃO NUIT EM TEMPO REAL
+    // ============================================
+    
     nuitInput.addEventListener('input', function() {
         const result = validarNUIT(this.value);
         const errorEl = document.getElementById('nuit-error');
@@ -435,11 +445,15 @@ document.addEventListener('DOMContentLoaded', function() {
             errorEl.classList.add('show');
         } else if (this.value && result.valid) {
             this.classList.add('documento-validado');
+            validEl.textContent = '✓ NUIT válido';
             validEl.classList.add('show');
         }
     });
     
-    // Validar NUIB em tempo real
+    // ============================================
+    // VALIDAÇÃO NUIB EM TEMPO REAL
+    // ============================================
+    
     nuibInput.addEventListener('input', function() {
         const result = validarNUIB(this.value);
         const errorEl = document.getElementById('nuib-error');
@@ -454,15 +468,20 @@ document.addEventListener('DOMContentLoaded', function() {
             errorEl.classList.add('show');
         } else if (this.value && result.valid) {
             this.classList.add('documento-validado');
+            validEl.textContent = '✓ NUIB válido';
             validEl.classList.add('show');
         }
     });
     
-    // Validar BI/Passaporte em tempo real
+    // ============================================
+    // VALIDAÇÃO BI/PASSAPORTE EM TEMPO REAL
+    // ============================================
+    
     biInput.addEventListener('input', function() {
         const result = validarDocumento(this.value);
         const errorEl = document.getElementById('bi-error');
         const validEl = document.getElementById('bi-valid');
+        
         this.classList.remove('documento-validado', 'documento-invalido');
         errorEl.classList.remove('show');
         validEl.classList.remove('show');
@@ -473,6 +492,7 @@ document.addEventListener('DOMContentLoaded', function() {
             errorEl.classList.add('show');
         } else if (this.value && result.valid) {
             this.classList.add('documento-validado');
+            validEl.textContent = '✓ Documento válido';
             validEl.classList.add('show');
             if (result.tipo) {
                 this.setAttribute('data-tipo', result.tipo);
@@ -480,19 +500,20 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Botões de tipo de documento
+    // ============================================
+    // BOTÕES DE TIPO DE DOCUMENTO
+    // ============================================
+    
     tipoDocumentoButtons.forEach(btn => {
         btn.addEventListener('click', function() {
             tipoDocumentoButtons.forEach(b => b.classList.remove('active'));
             this.classList.add('active');
             const tipo = this.dataset.tipo;
             
-            if (tipo === 'BI') {
+            if (tipo === 'BI' || tipo === 'DIRE') {
                 biInput.placeholder = 'Ex: 1234567890123A (13 dígitos + letra)';
             } else if (tipo === 'Passaporte') {
                 biInput.placeholder = 'Ex: MZ1234567';
-            } else if (tipo === 'DIRE') {
-                biInput.placeholder = 'Ex: 1234567890123X (13 dígitos + letra)';
             }
             
             biInput.focus();
@@ -502,7 +523,10 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Validação do formulário no submit
+    // ============================================
+    // VALIDAÇÃO DO FORMULÁRIO NO SUBMIT
+    // ============================================
+    
     form.addEventListener('submit', function(e) {
         let isValid = true;
         let primeiroErro = null;
@@ -575,7 +599,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Remover mensagens de erro ao digitar
+    // ============================================
+    // REMOVER MENSAGENS DE ERRO AO DIGITAR
+    // ============================================
+    
     document.querySelectorAll('input, textarea').forEach(el => {
         el.addEventListener('input', function() {
             this.classList.remove('documento-invalido');
