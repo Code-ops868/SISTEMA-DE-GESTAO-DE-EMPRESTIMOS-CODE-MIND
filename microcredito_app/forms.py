@@ -220,36 +220,36 @@ class ClienteForm(forms.ModelForm):
         return nuib
     #=====================================================================
     def clean_bi_passaporte(self):
-    """Valida BI: 13 dígitos + letra (Módulo 23)"""
-    bi = self.cleaned_data.get('bi_passaporte')
-    if bi:
-        bi = bi.strip().upper()
+        """Valida BI: 13 dígitos + letra (Módulo 23)"""
+        bi = self.cleaned_data.get('bi_passaporte')
+        if bi:
+            bi = bi.strip().upper()
+            
+            # BI: 13 dígitos + 1 letra
+            match = re.match(r'^([0-9]{13})([A-Z])$', bi)
+            if match:
+                numeros = match.group(1)
+                letra_informada = match.group(2)
+                
+                letras = 'ABCDEFGHJKLMNPQRSTVWXYZ'
+                peso = 0
+                for i, digito in enumerate(numeros):
+                    peso += int(digito) * (i + 1)
+                
+                resto = peso % 23
+                letra_calculada = letras[resto - 1] if resto > 0 else 'Z'
+                
+                if letra_informada != letra_calculada:
+                    raise ValidationError(f'BI inválido. Letra correta: {letra_calculada}')
+            else:
+                raise ValidationError('Formato: 13 dígitos + letra (ex: 031123456789B)')
+            
+            # Verificar duplicidade
+            cliente_id = self.instance.id if self.instance else None
+            if Cliente.objects.filter(bi_passaporte=bi).exclude(id=cliente_id).exists():
+                raise ValidationError('BI já cadastrado para outro cliente.')
+        return bi
         
-        # BI: 13 dígitos + 1 letra
-        match = re.match(r'^([0-9]{13})([A-Z])$', bi)
-        if match:
-            numeros = match.group(1)
-            letra_informada = match.group(2)
-            
-            letras = 'ABCDEFGHJKLMNPQRSTVWXYZ'
-            peso = 0
-            for i, digito in enumerate(numeros):
-                peso += int(digito) * (i + 1)
-            
-            resto = peso % 23
-            letra_calculada = letras[resto - 1] if resto > 0 else 'Z'
-            
-            if letra_informada != letra_calculada:
-                raise ValidationError(f'BI inválido. Letra correta: {letra_calculada}')
-        else:
-            raise ValidationError('Formato: 13 dígitos + letra (ex: 031123456789B)')
-        
-        # Verificar duplicidade
-        cliente_id = self.instance.id if self.instance else None
-        if Cliente.objects.filter(bi_passaporte=bi).exclude(id=cliente_id).exists():
-            raise ValidationError('BI já cadastrado para outro cliente.')
-    return bi
-    
     #=========================================================================
     def clean(self):
         """Validação cruzada dos campos"""
