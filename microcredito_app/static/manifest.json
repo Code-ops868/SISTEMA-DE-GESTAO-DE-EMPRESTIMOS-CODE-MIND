@@ -1,6 +1,6 @@
 ﻿{
-    "name": "Microcredito Sys",
-    "short_name": "Gestão de Empréstimos",
+    "name": "Gestao de Emprestimos",
+    "short_name": "SGE",
     "description": "Um Produto da CODE-MIND",
     "start_url": "/",
     "display": "standalone",
@@ -9,7 +9,7 @@
     "orientation": "portrait",
     "categories": ["finance", "business"],
     "icons": [
-        {"src": "/static/img/logo.svg", "sizes": "192x192", "type": "image/svg+xml", "purpose": "any"},
-        {"src": "/static/img/logo.svg", "sizes": "512x512", "type": "image/svg+xml", "purpose": "any"}
+        {"src": "/static/img/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+        {"src": "/static/img/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"}
     ]
 }
