@@ -1,15 +1,15 @@
 ﻿{
     "name": "CODE-MIND",
-    "short_name": "CODE-MIND",
-    "description": "Sistema de Gestão de Empréstimos e Microcrédito",
+    "short_name": "Gestão de Empréstimos",
+    "description": "Um Produto da CODE-MIND",
     "start_url": "/",
     "display": "standalone",
-    "background_color": "#0a0c10",
-    "theme_color": "#0a0c10",
+    "background_color": "#030007",
+    "theme_color": "#030007",
     "orientation": "portrait",
     "categories": ["finance", "business"],
     "icons": [
-        {"src": "/static/img/logo.svg", "sizes": "512x512", "type": "image/svg+xml", "purpose": "any maskable"},
-        {"src": "/static/img/logo.svg", "sizes": "192x192", "type": "image/svg+xml", "purpose": "any maskable"}
+        {"src": "/static/img/logo.svg", "sizes": "192x192", "type": "image/svg+xml", "purpose": "any"},
+        {"src": "/static/img/logo.svg", "sizes": "512x512", "type": "image/svg+xml", "purpose": "any"}
     ]
 }
