@@ -6,12 +6,16 @@ bugs de configuração corrigidos, e hardening de segurança aplicado
 (django-axes contra força bruta, honeypot contra bots, headers seguros).
 """
 
+
 from pathlib import Path
 import os
+import sys
 from celery.schedules import crontab
 from decouple import config
 import firebase_admin
 from firebase_admin import credentials
+import mimetypes
+mimetypes.add_type('application/manifest+json', '.json')
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -185,6 +189,7 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+WHITENOISE_MIMETYPES = {'.json': 'application/manifest+json', '.webmanifest': 'application/manifest+json'}
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'mediafiles')
@@ -283,3 +288,7 @@ NETSHOP_WALLET_ID = config('NETSHOP_WALLET_ID', default='')
 NETSHOP_WEBHOOK_SECRET = config('NETSHOP_WEBHOOK_SECRET', default='')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+#============================================================
+
+
+
