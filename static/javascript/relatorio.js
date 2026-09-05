@@ -243,12 +243,14 @@ window.exportarPDF = async function() {
         
         element.appendChild(chartsSection);
         
-        // 6. Adicionar tabelas
-        const tables = document.querySelector('.tables-row');
-        if (tables) {
+        // 6. Adicionar tabelas (percorre TODOS os blocos .tables-row da página,
+        // incluindo o de Top Clientes/Resumo e o de Histórico de Pagamentos)
+        const tablesRows = document.querySelectorAll('.tables-row');
+        tablesRows.forEach(tables => {
             const tablesClone = tables.cloneNode(true);
+            tablesClone.style.marginBottom = '20px';
             element.appendChild(tablesClone);
-        }
+        });
         
         // 7. Adicionar estilos
         const style = document.createElement('style');
@@ -333,6 +335,7 @@ window.exportarExcel = function() {
     // Coletar dados das tabelas
     const topClientes = [];
     const resumoStatus = [];
+    const historicoPagamentos = [];
     
     // Coletar dados da tabela Top Clientes
     document.querySelectorAll('#top-clientes-table tbody tr').forEach(row => {
@@ -355,6 +358,20 @@ window.exportarExcel = function() {
                 quantidade: cells[1].innerText,
                 valor: cells[2].innerText,
                 percentual: cells[3].innerText
+            });
+        }
+    });
+    
+    // Coletar dados da tabela Histórico de Pagamentos
+    document.querySelectorAll('#historico-pagamentos-table tbody tr').forEach(row => {
+        const cells = row.querySelectorAll('td');
+        if (cells.length === 5 && cells[0].innerText !== 'Nenhum pagamento registado') {
+            historicoPagamentos.push({
+                data: cells[0].innerText,
+                cliente: cells[1].innerText,
+                parcela: cells[2].innerText,
+                forma: cells[3].innerText,
+                valor: cells[4].innerText
             });
         }
     });
@@ -391,6 +408,17 @@ window.exportarExcel = function() {
     
     if (resumoStatus.length === 0) {
         wsData.push(['Nenhum dado disponível', '', '', '']);
+    }
+    
+    wsData.push([], ['HISTÓRICO DE PAGAMENTOS']);
+    wsData.push(['Data', 'Cliente', 'Parcela', 'Forma de Pagamento', 'Valor']);
+    
+    historicoPagamentos.forEach(h => {
+        wsData.push([h.data, h.cliente, h.parcela, h.forma, h.valor]);
+    });
+    
+    if (historicoPagamentos.length === 0) {
+        wsData.push(['Nenhum pagamento registado', '', '', '', '']);
     }
     
     // Criar workbook
