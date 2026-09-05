@@ -101,6 +101,9 @@
                 </a>
             </div>
             
+            <!-- ============================================ -->
+            <!-- ADMINISTRAÇÃO (Apenas para admin da empresa) -->
+            <!-- ============================================ -->
             {% if user.is_authenticated and user.funcionario.cargo == 'admin_empresa' %}
             <div class="menu-divider"></div>
             <div class="nav-section">
@@ -110,6 +113,16 @@
                     <i class="bi bi-people"></i>
                     <span>Funcionários</span>
                 </a>
+                
+                <!-- ============================================ -->
+                <!-- EMPRESAS MICROCRÉDITO (Apenas superusuário) -->
+                <!-- ============================================ -->
+                {% if user.is_superuser %}
+                <a href="{% url 'admin_lista_empresas' %}" class="nav-item">
+                    <i class="bi bi-building"></i>
+                    <span>Empresas Microcrédito</span>
+                </a>
+                {% endif %}
             </div>
             {% endif %}
             
