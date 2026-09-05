@@ -5,6 +5,7 @@ import json
 import re
 import uuid
 import secrets
+from io import BytesIO
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 
@@ -17,13 +18,16 @@ from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.db.models import Sum, Count, Q
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
 from fcm_django.models import FCMDevice
+
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfgen import canvas
 
 from .models import (
     Parcela, Pagamento, Emprestimo, Cliente,
@@ -1517,6 +1521,25 @@ def relatorios(request):
     total_parcelas = Parcela.objects.filter(emprestimo__usuario=usuario).count()
     taxa_inadimplencia = (parcelas_atrasadas / total_parcelas * 100) if total_parcelas > 0 else 0
 
+    # Histórico de pagamentos - para constar no relatório físico (PDF)
+    historico_pagamentos = Pagamento.objects.filter(
+        parcela__emprestimo__usuario=usuario
+    ).select_related('parcela__emprestimo__cliente').order_by('-data_pagamento')[:100]
+
+    historico_lista = []
+    for pag in historico_pagamentos:
+        historico_lista.append({
+            'id': pag.id,
+            'data': pag.data_pagamento,
+            'cliente_nome': pag.parcela.emprestimo.cliente.nome,
+            'emprestimo_id': pag.parcela.emprestimo.id,
+            'parcela_numero': pag.parcela.numero,
+            'total_parcelas': pag.parcela.emprestimo.quantidade_parcelas,
+            'valor': float(pag.valor),
+            'forma_pagamento': pag.forma_pagamento,
+            'get_forma_pagamento_display': dict(Pagamento.FORMA_CHOICES).get(pag.forma_pagamento, pag.forma_pagamento),
+        })
+
     context = {
         'total_clientes': total_clientes,
         'total_emprestimos': total_emprestimos,
@@ -1528,11 +1551,12 @@ def relatorios(request):
         'monthly_data': monthly_data,
         'top_clientes': top_clientes,
         'resumo_status': resumo_status,
+        'historico_pagamentos': historico_lista,
     }
 
     return render(request, 'relatorio/geral.html', context)
 
-
+#===============================================================================
 @login_required
 def pagar_parcela(request, parcela_id):
     parcela = get_object_or_404(Parcela, id=parcela_id, emprestimo__usuario=request.user)
@@ -1822,6 +1846,148 @@ def gerenciar_funcionarios(request):
 
 
 # ============================================
+# PAINEL ADMINISTRATIVO - EMPRESAS E FACTURAÇÃO
+# ============================================
+
+@login_required
+def admin_lista_empresas(request):
+    """Lista todas as empresas cadastradas na plataforma, com plano assinado e total já facturado (apenas superusuários)."""
+    if not request.user.is_superuser:
+        messages.error(request, 'Acesso restrito a administradores da plataforma.')
+        return redirect('dashboard')
+
+    empresas = Empresa.objects.select_related('user').all().order_by('nome')
+
+    empresas_lista = []
+    for empresa in empresas:
+        try:
+            assinatura = Assinatura.objects.select_related('plano').get(usuario=empresa.user)
+            plano_nome = assinatura.plano.get_nome_display() if assinatura.plano else 'Sem plano'
+            status_assinatura = assinatura.get_status_display()
+            data_expiracao = assinatura.data_expiracao
+        except Assinatura.DoesNotExist:
+            plano_nome = 'Sem plano'
+            status_assinatura = 'Sem assinatura'
+            data_expiracao = None
+
+        total_facturado = TransacaoMPESA.objects.filter(
+            usuario=empresa.user,
+            status='sucesso'
+        ).aggregate(Sum('valor'))['valor__sum'] or 0
+
+        empresas_lista.append({
+            'id': empresa.id,
+            'nome': empresa.nome,
+            'email': empresa.email,
+            'telefone': empresa.telefone,
+            'status_empresa': empresa.get_status_display(),
+            'plano_nome': plano_nome,
+            'status_assinatura': status_assinatura,
+            'data_expiracao': data_expiracao,
+            'total_facturado': float(total_facturado),
+        })
+
+    return render(request, 'admin_painel/lista_empresas.html', {'empresas': empresas_lista})
+
+
+@login_required
+def admin_relatorio_empresa_pdf(request, empresa_id):
+    """
+    Gera um relatório PDF com as transações de assinatura (M-Pesa/e-Mola) de uma
+    empresa, referentes a um mês específico. Acessível pelo superusuário da
+    plataforma ou pela própria empresa (para partilhar com os seus parceiros).
+    """
+    empresa = get_object_or_404(Empresa, id=empresa_id)
+
+    if not (request.user.is_superuser or request.user == empresa.user):
+        messages.error(request, 'Você não tem permissão para acessar este relatório.')
+        return redirect('dashboard')
+
+    hoje = date.today()
+    try:
+        ano = int(request.GET.get('ano', hoje.year))
+        mes = int(request.GET.get('mes', hoje.month))
+    except ValueError:
+        ano = hoje.year
+        mes = hoje.month
+
+    transacoes = TransacaoMPESA.objects.filter(
+        usuario=empresa.user,
+        status='sucesso',
+        data_criacao__year=ano,
+        data_criacao__month=mes,
+    ).order_by('data_criacao')
+
+    total_mes = transacoes.aggregate(Sum('valor'))['valor__sum'] or 0
+
+    buffer = BytesIO()
+    pdf = canvas.Canvas(buffer, pagesize=A4)
+    largura, altura = A4
+
+    meses_pt = [
+        '', 'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+        'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+    ]
+
+    y = altura - 50
+    pdf.setFont('Helvetica-Bold', 16)
+    pdf.drawString(50, y, 'CODE-MIND - Relatório de Facturação Mensal')
+
+    y -= 30
+    pdf.setFont('Helvetica', 11)
+    pdf.drawString(50, y, f'Empresa: {empresa.nome}')
+    y -= 18
+    pdf.drawString(50, y, f'Período: {meses_pt[mes]} de {ano}')
+    y -= 18
+    pdf.drawString(50, y, f'Gerado em: {timezone.now().strftime("%d/%m/%Y %H:%M")}')
+
+    y -= 35
+    pdf.setFont('Helvetica-Bold', 10)
+    pdf.drawString(50, y, 'Data')
+    pdf.drawString(150, y, 'Referência')
+    pdf.drawString(320, y, 'Telefone')
+    pdf.drawString(420, y, 'Valor (MT)')
+    y -= 5
+    pdf.line(50, y, 545, y)
+    y -= 15
+
+    pdf.setFont('Helvetica', 9)
+    if not transacoes.exists():
+        pdf.drawString(50, y, 'Nenhuma transação registada neste período.')
+        y -= 16
+    else:
+        for t in transacoes:
+            if y < 60:
+                pdf.showPage()
+                y = altura - 50
+                pdf.setFont('Helvetica', 9)
+
+            pdf.drawString(50, y, t.data_criacao.strftime('%d/%m/%Y %H:%M'))
+            pdf.drawString(150, y, t.referencia)
+            pdf.drawString(320, y, t.telefone)
+            pdf.drawString(420, y, f'{t.valor:.2f}')
+            y -= 16
+
+    y -= 10
+    pdf.line(50, y, 545, y)
+    y -= 20
+    pdf.setFont('Helvetica-Bold', 11)
+    pdf.drawString(50, y, f'Total facturado no mês: {total_mes:.2f} MT')
+    y -= 16
+    pdf.setFont('Helvetica', 9)
+    pdf.drawString(50, y, f'Número de transações: {transacoes.count()}')
+
+    pdf.showPage()
+    pdf.save()
+    buffer.seek(0)
+
+    nome_arquivo = f'relatorio_{empresa.nome.replace(" ", "_")}_{mes:02d}_{ano}.pdf'
+    response = HttpResponse(buffer, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="{nome_arquivo}"'
+    return response
+
+
+# ============================================
 # PÁGINAS LEGAIS
 # ============================================
 
@@ -1831,3 +1997,4 @@ def termos_e_condicoes(request):
 
 def politica_privacidade(request):
     return render(request, 'legal/politica_privacidade.html')
+

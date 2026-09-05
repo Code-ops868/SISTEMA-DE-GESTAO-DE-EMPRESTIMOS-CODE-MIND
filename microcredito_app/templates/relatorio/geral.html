@@ -106,6 +106,39 @@
             </div>
         </div>
     </div>
+
+    <!-- Histórico de Pagamentos -->
+    <div class="tables-row">
+        <div class="table-card" style="grid-column: 1 / -1;">
+            <div class="table-header"><h3>Histórico de Pagamentos</h3></div>
+            <div class="table-responsive">
+                <table class="data-table" id="historico-pagamentos-table">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Cliente</th>
+                            <th>Parcela</th>
+                            <th>Forma de Pagamento</th>
+                            <th>Valor</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pag in historico_pagamentos %}
+                        <tr>
+                            <td>{{ pag.data|date:"d/m/Y H:i" }}</td>
+                            <td>{{ pag.cliente_nome }}</td>
+                            <td>{{ pag.parcela_numero }}/{{ pag.total_parcelas }}</td>
+                            <td>{{ pag.get_forma_pagamento_display }}</td>
+                            <td class="text-success">MT {{ pag.valor|floatformat:2 }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5" class="empty-state"><p>Nenhum pagamento registado</p></td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script src="{% static 'javascript/relatorio.js' %}"></script>

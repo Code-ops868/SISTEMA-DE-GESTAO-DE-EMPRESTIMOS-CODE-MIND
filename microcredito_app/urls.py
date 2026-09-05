@@ -94,6 +94,12 @@ urlpatterns = [
     path('empresa/funcionarios/', views.gerenciar_funcionarios, name='gerenciar_funcionarios'),
     
     # ============================================
+    # PAINEL ADMINISTRATIVO - EMPRESAS E FACTURAÇÃO
+    # ============================================
+    path('admin-painel/empresas/', views.admin_lista_empresas, name='admin_lista_empresas'),
+    path('admin-painel/empresas/<int:empresa_id>/relatorio/', views.admin_relatorio_empresa_pdf, name='admin_relatorio_empresa_pdf'),
+    
+    # ============================================
     # PÁGINAS LEGAIS
     # ============================================
     path('legal/termos_e_condicoes/', views.termos_e_condicoes, name='termos_e_condicoes'),

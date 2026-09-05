@@ -1,0 +1,301 @@
+{% extends "core/dashboard_base.html" %}
+{% load static %}
+
+{% block title %}Empresas - CODEMIND{% endblock %}
+
+{% block page_css %}
+<link rel="stylesheet" href="{% static 'datatables/css/dataTables.bootstrap5.min.css' %}">
+<link rel="stylesheet" href="{% static 'css/clientes.css' %}">
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="clientes-container">
+    <div class="clientes-header">
+        <div>
+            <h1 class="clientes-title">Empresas Cadastradas</h1>
+            <p class="clientes-subtitle">Visão geral de todas as empresas, planos assinados e facturação mensal</p>
+        </div>
+    </div>
+
+    <div class="clientes-table-card">
+        <div class="clientes-table-wrapper">
+            <table class="data-table" id="empresas-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Empresa</th>
+                        <th>E-mail</th>
+                        <th>Telefone</th>
+                        <th>Status</th>
+                        <th>Plano</th>
+                        <th>Assinatura</th>
+                        <th>Expira em</th>
+                        <th>Total Facturado</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for empresa in empresas %}
+                    <tr>
+                        <td>{{ empresa.id }}</td>
+                        <td><strong>{{ empresa.nome }}</strong></td>
+                        <td>{{ empresa.email|default:"—" }}</td>
+                        <td>{{ empresa.telefone|default:"—" }}</td>
+                        <td>
+                            {% if empresa.status_empresa == "Ativa" %}
+                                <span class="badge badge-success">{{ empresa.status_empresa }}</span>
+                            {% elif empresa.status_empresa == "Suspensa" %}
+                                <span class="badge badge-warning">{{ empresa.status_empresa }}</span>
+                            {% else %}
+                                <span class="badge badge-secondary">{{ empresa.status_empresa }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if empresa.plano_nome == "Sem plano" %}
+                                <span class="text-muted">{{ empresa.plano_nome }}</span>
+                            {% else %}
+                                <span class="badge badge-primary">{{ empresa.plano_nome }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if empresa.status_assinatura == "Ativa" %}
+                                <span class="badge badge-success">{{ empresa.status_assinatura }}</span>
+                            {% elif empresa.status_assinatura == "Período de Teste" %}
+                                <span class="badge badge-info">{{ empresa.status_assinatura }}</span>
+                            {% elif empresa.status_assinatura == "Expirada" or empresa.status_assinatura == "Sem assinatura" %}
+                                <span class="badge badge-danger">{{ empresa.status_assinatura }}</span>
+                            {% else %}
+                                <span class="badge badge-secondary">{{ empresa.status_assinatura }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if empresa.data_expiracao %}
+                                {{ empresa.data_expiracao|date:"d/m/Y" }}
+                            {% else %}
+                                <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td><strong>{{ empresa.total_facturado|floatformat:2 }} MT</strong></td>
+                        <td class="actions">
+                            <div class="btn-group-sm">
+                                <button type="button" class="btn btn-outline-info btn-sm" title="Gerar Relatório Mensal" data-bs-toggle="modal" data-bs-target="#relatorioModal{{ empresa.id }}">
+                                    <i class="bi bi-file-earmark-pdf"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Modal para escolher mês/ano do relatório -->
+                    <div class="modal fade" id="relatorioModal{{ empresa.id }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">
+                                        <i class="bi bi-file-earmark-pdf text-success"></i>
+                                        Relatório de {{ empresa.nome }}
+                                    </h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                                </div>
+                                <form method="GET" action="{% url 'admin_relatorio_empresa_pdf' empresa.id %}" target="_blank">
+                                    <div class="modal-body">
+                                        <div class="documento-info-modal">
+                                            <div class="mb-3">
+                                                <label class="documento-label d-block mb-1">Mês</label>
+                                                <select name="mes" class="form-select">
+                                                    <option value="1">Janeiro</option>
+                                                    <option value="2">Fevereiro</option>
+                                                    <option value="3">Março</option>
+                                                    <option value="4">Abril</option>
+                                                    <option value="5">Maio</option>
+                                                    <option value="6">Junho</option>
+                                                    <option value="7">Julho</option>
+                                                    <option value="8">Agosto</option>
+                                                    <option value="9">Setembro</option>
+                                                    <option value="10">Outubro</option>
+                                                    <option value="11">Novembro</option>
+                                                    <option value="12">Dezembro</option>
+                                                </select>
+                                            </div>
+                                            <div class="mb-2">
+                                                <label class="documento-label d-block mb-1">Ano</label>
+                                                <input type="number" name="ano" class="form-control" value="{% now 'Y' %}" min="2024" max="{% now 'Y' %}">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                                        <button type="submit" class="btn btn-primary btn-sm">
+                                            <i class="bi bi-download"></i> Gerar PDF
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <tr class="empty-row">
+                        <td colspan="10" class="empty-state text-center py-5">
+                            <div>
+                                <i class="bi bi-building fs-1"></i>
+                                <p>Nenhuma empresa cadastrada ainda</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Estilos adicionais para o select/input dentro dos modais -->
+<style>
+    .documento-info-modal .form-select,
+    .documento-info-modal .form-control {
+        background: rgba(230, 237, 243, 0.05);
+        border: 1px solid rgba(56, 139, 253, 0.2);
+        color: #e6edf3;
+        border-radius: 8px;
+    }
+
+    .documento-info-modal .form-select:focus,
+    .documento-info-modal .form-control:focus {
+        background: rgba(230, 237, 243, 0.08);
+        border-color: rgba(56, 139, 253, 0.5);
+        color: #e6edf3;
+        box-shadow: none;
+    }
+
+    .documento-info-modal .form-select option {
+        background: #0d1117;
+        color: #e6edf3;
+    }
+
+    .modal-content {
+        background: linear-gradient(135deg, #0d1117 0%, #0a0c10 100%);
+        border: 1px solid rgba(56, 139, 253, 0.2);
+        border-radius: 16px;
+        color: #e6edf3;
+    }
+
+    .modal-header {
+        border-bottom: 1px solid rgba(56, 139, 253, 0.15);
+        padding: 1.25rem 1.5rem;
+    }
+
+    .modal-header .btn-close {
+        filter: invert(1) brightness(0.8);
+    }
+
+    .modal-body {
+        padding: 1.5rem;
+    }
+
+    .modal-footer {
+        border-top: 1px solid rgba(56, 139, 253, 0.15);
+        padding: 1rem 1.5rem;
+    }
+
+    .modal-footer .btn-secondary {
+        border-color: rgba(230, 237, 243, 0.2);
+        color: rgba(230, 237, 243, 0.7);
+        background: transparent;
+    }
+
+    .modal-footer .btn-secondary:hover {
+        background: rgba(230, 237, 243, 0.05);
+        border-color: rgba(230, 237, 243, 0.3);
+    }
+
+    .modal-footer .btn-primary {
+        background: linear-gradient(135deg, #88ff66 0%, #5fd43e 100%);
+        border: none;
+        color: #0a0c10;
+    }
+
+    .modal-footer .btn-primary:hover {
+        background: linear-gradient(135deg, #5fd43e 0%, #88ff66 100%);
+        box-shadow: 0 5px 20px rgba(136, 255, 102, 0.3);
+    }
+
+    .badge-danger {
+        background: rgba(220, 53, 69, 0.2);
+        color: #dc3545;
+    }
+
+    .text-muted {
+        color: rgba(230, 237, 243, 0.5) !important;
+    }
+
+    .btn-group-sm .btn {
+        padding: 0.2rem 0.5rem;
+        font-size: 0.75rem;
+        border-radius: 6px;
+    }
+</style>
+
+<!-- Scripts -->
+<script src="{% static 'javascript/jquery-3.7.0.min.js' %}"></script>
+<script src="{% static 'datatables/js/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'datatables/js/dataTables.bootstrap5.min.js' %}"></script>
+
+<script>
+function destruirDataTable() {
+    if (jQuery.fn.DataTable.isDataTable('#empresas-table')) {
+        jQuery('#empresas-table').DataTable().destroy();
+    }
+}
+
+function inicializarDataTable() {
+    const tabela = jQuery('#empresas-table');
+    const tbody = tabela.find('tbody');
+    const temDados = tbody.find('tr').length > 0 &&
+                     tbody.find('.empty-row').length === 0;
+
+    if (temDados) {
+        destruirDataTable();
+
+        tabela.DataTable({
+            language: {
+                "sEmptyTable": "Nenhuma empresa encontrada",
+                "sInfo": "Mostrando _START_ até _END_ de _TOTAL_ empresas",
+                "sInfoEmpty": "Mostrando 0 até 0 de 0 empresas",
+                "sInfoFiltered": "(filtrado de _MAX_ empresas no total)",
+                "sLengthMenu": "Mostrar _MENU_ empresas por página",
+                "sLoadingRecords": "Carregando...",
+                "sProcessing": "Processando...",
+                "sSearch": "Pesquisar:",
+                "sZeroRecords": "Nenhuma empresa encontrada",
+                "oPaginate": {
+                    "sFirst": "Primeiro",
+                    "sLast": "Último",
+                    "sNext": "Seguinte",
+                    "sPrevious": "Anterior"
+                }
+            },
+            pageLength: 10,
+            responsive: true,
+            order: [[0, 'desc']],
+            columnDefs: [
+                { orderable: false, targets: [9] } // Desabilitar ordenação na coluna Ações
+            ]
+        });
+        console.log('✅ DataTables inicializado');
+    } else {
+        console.log('ℹ️ Tabela vazia, DataTables não inicializado');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    if (typeof jQuery !== 'undefined' && jQuery.fn && jQuery.fn.DataTable) {
+        inicializarDataTable();
+    }
+});
+
+window.addEventListener('pageshow', function() {
+    if (typeof jQuery !== 'undefined' && jQuery.fn && jQuery.fn.DataTable) {
+        inicializarDataTable();
+    }
+});
+</script>
+{% endblock %}
