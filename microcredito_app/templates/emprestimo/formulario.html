@@ -45,7 +45,7 @@
     
     /* Dia em hover */
     .flatpickr-calendar .flatpickr-day:hover {
-        background: rgba(136, 255, 102,  ㅤ0.15) !important;
+        background: rgba(136, 255, 102, 0.15) !important;
         color: #88ff66 !important;
         border-color: rgba(136, 255, 102, 0.3) !important;
     }
@@ -192,6 +192,39 @@
         flex: 1 !important;
         text-align: center !important;
     }
+
+    /* Estilo do botão Imprimir */
+    .btn-print {
+        background: linear-gradient(135deg, #388bfd 0%, #1a6bc4 100%);
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 10px;
+        color: #fff;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+    }
+    
+    .btn-print:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(56, 139, 253, 0.4);
+        background: linear-gradient(135deg, #1a6bc4 0%, #388bfd 100%);
+        color: #fff;
+    }
+
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+        margin-top: 2rem;
+        padding-top: 1rem;
+        border-top: 1px solid rgba(56, 139, 253, 0.2);
+        flex-wrap: wrap;
+    }
 </style>
 {% endblock %}
 
@@ -316,6 +349,13 @@
             
             <!-- Ações -->
             <div class="form-actions">
+                <!-- Botão Imprimir Contrato - aparece apenas se for edição -->
+                {% if emprestimo %}
+                <a href="{% url 'gerar_contrato_pdf' emprestimo.id %}" class="btn-print" target="_blank">
+                    <i class="bi bi-printer"></i> Imprimir Contrato
+                </a>
+                {% endif %}
+                
                 <a href="{% url 'emprestimo' %}" class="btn-secondary">
                     <i class="bi bi-arrow-left"></i> Cancelar
                 </a>
@@ -439,7 +479,7 @@ document.addEventListener('DOMContentLoaded', function() {
     dataVencimentoInput.addEventListener('change', calcularSimulacao);
     
     // ============================================
-    // VALIDAÇÃO DO FORMULÁRIO - CORRIGIDA
+    // VALIDAÇÃO DO FORMULÁRIO
     // ============================================
     
     const form = document.getElementById('formEmprestimo');
@@ -496,7 +536,7 @@ document.addEventListener('DOMContentLoaded', function() {
             quantidadeParcelasInput.classList.remove('documento-invalido');
         }
         
-        // ✅ CORREÇÃO: Validar Data de Vencimento apenas se houver valor
+        // Validar Data de Vencimento
         if (dataVencimentoInput.value) {
             document.getElementById('data_primeiro_vencimento-error').classList.remove('show');
             dataVencimentoInput.classList.remove('documento-invalido');
