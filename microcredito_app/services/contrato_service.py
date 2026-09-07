@@ -20,7 +20,7 @@ class ContratoService:
             'microcredito_app', 
             'templates', 
             'contrato', 
-            'contrato.docx'  # ← Nome corrigido
+            'contrato.docx'
         )
         return template_path
     
@@ -72,6 +72,21 @@ class ContratoService:
             {'descricao': '1 TV 21p', 'montante': '2.000,00'},
         ]
     
+    def _get_provincia_cidade(self, endereco):
+        """Extrai província e cidade do endereço do cliente/empresa"""
+        if not endereco:
+            return "Nampula", "Nampula"
+        
+        # Tenta extrair localização do endereço
+        partes = endereco.split(',')
+        if len(partes) >= 2:
+            cidade = partes[0].strip()
+            provincia = partes[-1].strip() if len(partes) > 1 else cidade
+            return provincia, cidade
+        
+        # Se não conseguir extrair, usa o endereço como cidade
+        return endereco, endereco
+    
     def gerar_contrato(self, emprestimo):
         """
         Gera o contrato preenchendo o template DOCX
@@ -80,7 +95,42 @@ class ContratoService:
         usuario = cliente.usuario
         empresa = usuario.empresa if hasattr(usuario, 'empresa') else None
         
-        # Calcular prazo de reembolso (meses)
+        # ============================================
+        # DADOS DA EMPRESA (OPERADORA)
+        # ============================================
+        if empresa:
+            operadora_nome = empresa.nome
+            operadora_endereco = empresa.endereco or "Rua de Teté"
+            # Extrair cidade e província do endereço da empresa
+            operadora_provincia, operadora_cidade = self._get_provincia_cidade(empresa.endereco)
+            administradora_nome = usuario.get_full_name() or usuario.username
+        else:
+            operadora_nome = "Operadora de Microcrédito"
+            operadora_endereco = "Rua de Teté"
+            operadora_provincia = "Nampula"
+            operadora_cidade = "Nampula"
+            administradora_nome = "Senhor(a) Administrador(a)"
+        
+        # ============================================
+        # DADOS DO MUTUÁRIO (CLIENTE)
+        # ============================================
+        mutuario_estado_civil = getattr(cliente, 'estado_civil', 'solteiro(a)')
+        mutuario_nacionalidade = "Moçambicana"
+        mutuario_residencia = cliente.endereco or "Nampula, bairro de [Bairro]"
+        mutuario_celular = cliente.telefone
+        
+        # Extrair cidade do endereço do mutuário
+        _, mutuario_cidade = self._get_provincia_cidade(cliente.endereco)
+        
+        # Documento do mutuário
+        mutuario_dire = cliente.bi_passaporte or "[Número do Documento]"
+        mutuario_dire_emissao = self._get_data_formatada(cliente.data_emissao_documento) if cliente.data_emissao_documento else "[Data de Emissão]"
+        mutuario_dire_local = "Nampula"  # Pode ser extraído do endereço se disponível
+        mutuario_dire_validade = self._get_data_formatada(cliente.data_validade_documento) if cliente.data_validade_documento else "[Data de Validade]"
+        
+        # ============================================
+        # DADOS DO EMPRÉSTIMO
+        # ============================================
         periodicidade = getattr(emprestimo, 'periodicidade', 'semanal')
         if periodicidade == 'semanal':
             prazo_meses = int(emprestimo.quantidade_parcelas / 4)
@@ -89,48 +139,29 @@ class ContratoService:
             prazo_meses = emprestimo.quantidade_parcelas
             periodicidade_prestacoes = 'mensais'
         
-        # Dados da empresa
-        if empresa:
-            operadora_nome = empresa.nome
-            operadora_cidade = "Nampula"
-            operadora_endereco = empresa.endereco or "Rua de Teté"
-            administradora_nome = usuario.get_full_name() or usuario.username
-        else:
-            operadora_nome = "Operadora de Microcrédito"
-            operadora_cidade = "Nampula"
-            operadora_endereco = "Rua de Teté"
-            administradora_nome = "Senhor(a) Administrador(a)"
-        
-        # Dados do mutuário
-        mutuario_estado_civil = getattr(cliente, 'estado_civil', 'solteiro(a)')
-        mutuario_nacionalidade = "Moçambicana"
-        mutuario_residencia = cliente.endereco or "Nampula, bairro de [Bairro]"
-        mutuario_celular = cliente.telefone
-        
-        # Documento do mutuário
-        mutuario_dire = cliente.bi_passaporte or "[Número do Documento]"
-        mutuario_dire_emissao = self._get_data_formatada(cliente.data_emissao_documento) if cliente.data_emissao_documento else "[Data de Emissão]"
-        mutuario_dire_local = "Nampula"
-        mutuario_dire_validade = self._get_data_formatada(cliente.data_validade_documento) if cliente.data_validade_documento else "[Data de Validade]"
-        
-        # Dados do empréstimo
         valor_emprestimo = f"{emprestimo.valor:,.2f}".replace(',', '.')
         valor_emprestimo_extenso = self._valor_por_extenso(emprestimo.valor)
         numero_prestacoes = emprestimo.quantidade_parcelas
         numero_prestacoes_extenso = self._numero_por_extenso(numero_prestacoes)
         taxa_juros = emprestimo.taxa_juros
         
-        # Dados de reembolso
+        # ============================================
+        # REEMBOLSO
+        # ============================================
         prazo_reembolso = prazo_meses
         prazo_reembolso_extenso = self._numero_por_extenso(prazo_meses)
         
-        # Garantias
+        # ============================================
+        # GARANTIAS DO MUTUÁRIO
+        # ============================================
         garantias = self._get_garantias_padrao()
         total_garantias = 0
         for g in garantias:
             total_garantias += float(g['montante'].replace('.', '').replace(',', '.'))
         
-        # Dados do avalista
+        # ============================================
+        # AVALISTA
+        # ============================================
         avalista = getattr(emprestimo, 'avalista', None)
         if avalista:
             avalista_nome = avalista.nome
@@ -154,11 +185,11 @@ class ContratoService:
         for g in garantias_avalista:
             total_garantias_avalista += float(g['montante'].replace('.', '').replace(',', '.'))
         
-        # Taxa de juros mora
+        # ============================================
+        # OUTROS DADOS
+        # ============================================
         taxa_juros_mora = 2.0
-        
-        # Foro
-        foro_cidade = "Nampula"
+        foro_cidade = mutuario_cidade if mutuario_cidade else "Nampula"
         
         # Data do contrato
         contrato_data = datetime.now().strftime("%d de %B de %Y")
@@ -171,12 +202,17 @@ class ContratoService:
         for en, pt in meses.items():
             contrato_data = contrato_data.replace(en, pt)
         
-        # Montar contexto do template
+        # ============================================
+        # CONTEXTO DO TEMPLATE
+        # ============================================
         context = {
+            # Operadora
             'operadora_nome': operadora_nome,
             'operadora_cidade': operadora_cidade,
             'operadora_endereco': operadora_endereco,
             'administradora_nome': administradora_nome,
+            
+            # Mutuário
             'mutuario_nome': cliente.nome,
             'mutuario_estado_civil': mutuario_estado_civil,
             'mutuario_nacionalidade': mutuario_nacionalidade,
@@ -186,16 +222,24 @@ class ContratoService:
             'mutuario_dire_emissao': mutuario_dire_emissao,
             'mutuario_dire_local': mutuario_dire_local,
             'mutuario_dire_validade': mutuario_dire_validade,
+            
+            # Empréstimo
             'valor_emprestimo': valor_emprestimo,
             'valor_emprestimo_extenso': valor_emprestimo_extenso,
             'numero_prestacoes': numero_prestacoes,
             'numero_prestacoes_extenso': numero_prestacoes_extenso,
             'periodicidade_prestacoes': periodicidade_prestacoes,
             'taxa_juros': taxa_juros,
+            
+            # Reembolso
             'prazo_reembolso': prazo_reembolso,
             'prazo_reembolso_extenso': prazo_reembolso_extenso,
+            
+            # Garantias
             'garantias': garantias,
             'valor_total_garantias_mutuario': f"{total_garantias:,.2f}".replace(',', '.'),
+            
+            # Avalista
             'avalista_nome': avalista_nome,
             'avalista_naturalidade': avalista_naturalidade,
             'avalista_residencia': avalista_residencia,
@@ -204,18 +248,21 @@ class ContratoService:
             'avalista_bi_local': avalista_bi_local,
             'garantias_avalista': garantias_avalista,
             'valor_total_garantias_avalista': f"{total_garantias_avalista:,.2f}".replace(',', '.'),
+            
+            # Outros
             'taxa_juros_mora': taxa_juros_mora,
             'foro_cidade': foro_cidade,
-            'contrato_cidade': "Nampula",
+            'contrato_cidade': operadora_cidade,
             'contrato_data': contrato_data,
         }
         
-        # Carregar e preencher o template
+        # ============================================
+        # GERAR CONTRATO
+        # ============================================
         try:
             doc = DocxTemplate(self.template_path)
             doc.render(context)
             
-            # Salvar em memória
             buffer = io.BytesIO()
             doc.save(buffer)
             buffer.seek(0)
