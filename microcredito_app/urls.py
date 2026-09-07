@@ -132,8 +132,7 @@ urlpatterns = [
     # ============================================
     path('confirmar-email/<str:codigo>/', views.confirmar_email_view, name='confirmar_email'),
 
-    #=========================Contrato Pdf ========================================
+    #=========================Contrato Pdf ========
     path('contrato/', pagina_contrato, name='pagina_contrato'),
-    path('contrato/pdf/', gerar_contrato_pdf, name='gerar_contrato_pdf'),
-   
+    path('contrato/pdf/', gerar_contrato_pdf, name='gerar_contrato_pdf'),   
 ]

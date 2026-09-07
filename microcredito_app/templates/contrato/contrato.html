@@ -175,15 +175,13 @@
         {% endif %}
 
         <div class="btn-group">
-            <a href="{% url 'gerar_contrato_pdf' %}" class="btn-print" target="_blank">
+            <a href="{% url 'gerar_contrato_pdf' %}?emprestimo_id={{ emprestimos.0.id }}" class="btn-print" target="_blank">
                 <i class="bi bi-printer"></i> Imprimir Contrato
             </a>
             <a href="{% url 'dashboard' %}" class="btn-secondary">
                 <i class="bi bi-arrow-left"></i> Voltar
             </a>
         </div>
-
-     
 
         <div class="contrato-info">
             <i class="bi bi-info-circle"></i>

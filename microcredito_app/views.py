@@ -2023,36 +2023,33 @@ def politica_privacidade(request):
 # microcredito_app/views.py
 
 #================================Contrato pdf=======================================================
-from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
 from .models import Emprestimo
 from .services.contrato_service import ContratoService
 
 @login_required
-@verificar_assinatura
-def pagina_contrato(request):
-    """Página do contrato com botão Imprimir"""
-    emprestimos = Emprestimo.objects.filter(usuario=request.user)
-    return render(request, 'contrato/contrato.html', {'emprestimos': emprestimos})
-
-
-@login_required
 def gerar_contrato_pdf(request):
-    """Gera o PDF do contrato para impressão"""
+    """Gera o DOCX do contrato preenchendo o template"""
     try:
+        # Buscar o emprestimo_id via GET (parâmetro na URL)
         emprestimo_id = request.GET.get('emprestimo_id')
-        if not emprestimo_id:
-            emprestimo = Emprestimo.objects.filter(usuario=request.user).first()
-        else:
+        
+        if emprestimo_id:
             emprestimo = get_object_or_404(Emprestimo, id=emprestimo_id, usuario=request.user)
+        else:
+            # Se não tiver ID, pega o primeiro empréstimo ativo do usuário
+            emprestimo = Emprestimo.objects.filter(usuario=request.user, status='ativo').first()
+            if not emprestimo:
+                return HttpResponse("Nenhum empréstimo ativo encontrado", status=404)
         
         service = ContratoService()
-        pdf_content = service.gerar_contrato(emprestimo)
+        doc_content = service.gerar_contrato(emprestimo)
         
-        response = HttpResponse(pdf_content, content_type='application/pdf')
-        response['Content-Disposition'] = f'filename=contrato_emprestimo_{emprestimo.id}.pdf'
+        response = HttpResponse(doc_content, content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+        response['Content-Disposition'] = f'attachment; filename=contrato_emprestimo_{emprestimo.id}.docx'
         return response
-    
+        
     except Exception as e:
         import logging
         logger = logging.getLogger(__name__)
