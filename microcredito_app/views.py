@@ -2022,54 +2022,39 @@ def politica_privacidade(request):
 
 # microcredito_app/views.py
 
-#=======================================================================================
-from django.shortcuts import render
+#================================Contrato pdf=======================================================
+from django.shortcuts import render, get_object_or_404
+from django.http import HttpResponse
 from .models import Emprestimo
+from .services.contrato_service import ContratoService
 
 @login_required
 @verificar_assinatura
 def pagina_contrato(request):
     """Página do contrato com botão Imprimir"""
-    emprestimos = Emprestimo.objects.filter(usuario=request.user, status='ativo')
+    emprestimos = Emprestimo.objects.filter(usuario=request.user)
     return render(request, 'contrato/contrato.html', {'emprestimos': emprestimos})
 
 
 @login_required
 def gerar_contrato_pdf(request):
-    """Gera o PDF do contrato - versão simplificada"""
-    import io
-    from datetime import datetime
-    from reportlab.lib.pagesizes import A4
-    from reportlab.lib.units import cm
-    from reportlab.pdfgen import canvas
-    from django.http import HttpResponse
+    """Gera o PDF do contrato para impressão"""
+    try:
+        emprestimo_id = request.GET.get('emprestimo_id')
+        if not emprestimo_id:
+            emprestimo = Emprestimo.objects.filter(usuario=request.user).first()
+        else:
+            emprestimo = get_object_or_404(Emprestimo, id=emprestimo_id, usuario=request.user)
+        
+        service = ContratoService()
+        pdf_content = service.gerar_contrato(emprestimo)
+        
+        response = HttpResponse(pdf_content, content_type='application/pdf')
+        response['Content-Disposition'] = f'filename=contrato_emprestimo_{emprestimo.id}.pdf'
+        return response
     
-    buffer = io.BytesIO()
-    c = canvas.Canvas(buffer, pagesize=A4)
-    width, height = A4
-    
-    # Título
-    c.setFont("Helvetica", 16)
-    c.drawCentredString(width / 2, height - 2*cm, "CONTRATO DE EMPRÉSTIMO")
-    
-    # Dados
-    y = height - 4*cm
-    c.setFont("Helvetica", 10)
-    c.drawString(2*cm, y, "CONTRATO DE EMPRÉSTIMO - MODELO")
-    y -= 20
-    c.drawString(2*cm, y, "Data: " + datetime.now().strftime("%d/%m/%Y"))
-    
-    # Assinaturas
-    y -= 40
-    c.drawString(2*cm, y, "Assinatura do mutuário")
-    c.drawString(10*cm, y, "Assinatura do avalista")
-    y -= 20
-    c.line(2*cm, y, 2*cm + 5*cm, y)
-    c.line(10*cm, y, 10*cm + 5*cm, y)
-    
-    c.save()
-    buffer.seek(0)
-    
-    response = HttpResponse(buffer.getvalue(), content_type='application/pdf')
-    response['Content-Disposition'] = 'filename=contrato_emprestimo.pdf'
-    return response
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Erro ao gerar contrato: {e}")
+        return HttpResponse(f"Erro ao gerar contrato: {str(e)}", status=500)
