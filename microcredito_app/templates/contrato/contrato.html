@@ -9,31 +9,34 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        justify-content: center;
+        justify-content: flex-start;
         min-height: 70vh;
-        padding: 2rem;
+        padding: 2rem 1rem;
+        max-width: 100%;
+        width: 100%;
     }
 
     .contrato-card {
         background: linear-gradient(135deg, rgba(13, 17, 23, 0.9), rgba(10, 12, 16, 0.95));
         border: 1px solid rgba(56, 139, 253, 0.2);
         border-radius: 20px;
-        padding: 3rem;
+        padding: 2.5rem 2rem;
         text-align: center;
-        max-width: 600px;
+        max-width: 750px;
         width: 100%;
         backdrop-filter: blur(10px);
+        margin: 0 auto;
     }
 
     .contrato-card .icon {
-        font-size: 4rem;
+        font-size: 3.5rem;
         color: #88ff66;
         margin-bottom: 1rem;
     }
 
     .contrato-card h2 {
         color: #e6edf3;
-        font-size: 1.75rem;
+        font-size: 1.6rem;
         font-weight: 600;
         margin-bottom: 0.5rem;
     }
@@ -41,7 +44,7 @@
     .contrato-card p {
         color: rgba(230, 237, 243, 0.6);
         font-size: 0.95rem;
-        margin-bottom: 2rem;
+        margin-bottom: 1.5rem;
     }
 
     .btn-print {
@@ -51,7 +54,7 @@
         border-radius: 10px;
         color: #0a0c10;
         font-weight: 600;
-        font-size: 1.1rem;
+        font-size: 1.05rem;
         display: inline-flex;
         align-items: center;
         gap: 0.75rem;
@@ -66,17 +69,17 @@
     }
 
     .btn-print i {
-        font-size: 1.3rem;
+        font-size: 1.2rem;
     }
 
     .btn-secondary {
         background: transparent;
-        border: 1px solid rgba(230, 237, 243, 0.3);
+        border: 1px solid rgba(230, 237, 243, 0.25);
         padding: 0.75rem 2.5rem;
         border-radius: 10px;
         color: rgba(230, 237, 243, 0.7);
         font-weight: 500;
-        font-size: 1.1rem;
+        font-size: 1.05rem;
         display: inline-flex;
         align-items: center;
         gap: 0.75rem;
@@ -86,15 +89,15 @@
     }
 
     .btn-secondary:hover {
-        border-color: rgba(230, 237, 243, 0.6);
+        border-color: rgba(230, 237, 243, 0.5);
         color: #e6edf3;
         background: rgba(230, 237, 243, 0.05);
         transform: translateY(-2px);
     }
 
     .contrato-info {
-        margin-top: 2rem;
-        padding-top: 1.5rem;
+        margin-top: 1.5rem;
+        padding-top: 1.2rem;
         border-top: 1px solid rgba(56, 139, 253, 0.15);
         color: rgba(230, 237, 243, 0.4);
         font-size: 0.85rem;
@@ -110,28 +113,110 @@
         gap: 1rem;
         justify-content: center;
         flex-wrap: wrap;
+        margin-top: 0.5rem;
     }
 
     .info-emprestimo {
         background: rgba(136, 255, 102, 0.05);
         border: 1px solid rgba(136, 255, 102, 0.15);
         border-radius: 10px;
-        padding: 1rem 1.5rem;
-        margin: 1rem 0;
+        padding: 0.8rem 1.2rem;
+        margin: 0.8rem 0 1.5rem 0;
         text-align: left;
+        width: 100%;
     }
 
     .info-emprestimo .row {
         display: flex;
         justify-content: space-between;
-        padding: 0.25rem 0;
+        padding: 0.2rem 0;
         color: #e6edf3;
         font-size: 0.9rem;
+        border-bottom: 1px solid rgba(136, 255, 102, 0.05);
+    }
+
+    .info-emprestimo .row:last-child {
+        border-bottom: none;
     }
 
     .info-emprestimo .row span:last-child {
         color: #88ff66;
         font-weight: 600;
+    }
+
+    .text-muted {
+        color: rgba(230, 237, 243, 0.5) !important;
+        margin: 1rem 0;
+    }
+
+    /* ============================================ */
+    /* RESPONSIVIDADE */
+    /* ============================================ */
+
+    @media (max-width: 768px) {
+        .contrato-container {
+            padding: 1.2rem 0.8rem;
+            min-height: auto;
+        }
+
+        .contrato-card {
+            padding: 1.8rem 1.2rem;
+            border-radius: 16px;
+        }
+
+        .contrato-card h2 {
+            font-size: 1.3rem;
+        }
+
+        .contrato-card .icon {
+            font-size: 2.8rem;
+        }
+
+        .btn-print,
+        .btn-secondary {
+            width: 100%;
+            justify-content: center;
+            padding: 0.7rem 1.5rem;
+            font-size: 0.95rem;
+        }
+
+        .btn-group {
+            flex-direction: column;
+            gap: 0.6rem;
+        }
+
+        .info-emprestimo .row {
+            font-size: 0.85rem;
+            flex-wrap: wrap;
+            gap: 0.2rem;
+        }
+
+        .contrato-info {
+            font-size: 0.75rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .contrato-card {
+            padding: 1.2rem 0.8rem;
+            border-radius: 12px;
+        }
+
+        .contrato-card h2 {
+            font-size: 1.1rem;
+        }
+
+        .contrato-card p {
+            font-size: 0.85rem;
+        }
+
+        .info-emprestimo .row {
+            font-size: 0.78rem;
+        }
+
+        .contrato-card .icon {
+            font-size: 2.2rem;
+        }
     }
 </style>
 {% endblock %}
