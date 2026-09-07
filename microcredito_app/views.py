@@ -2028,6 +2028,14 @@ from django.shortcuts import get_object_or_404
 from .models import Emprestimo
 from .services.contrato_service import ContratoService
 
+
+@login_required
+@verificar_assinatura
+def pagina_contrato(request):
+    """Página do contrato com botão Imprimir"""
+    emprestimos = Emprestimo.objects.filter(usuario=request.user)
+    return render(request, 'contrato/contrato.html', {'emprestimos': emprestimos})
+
 @login_required
 def gerar_contrato_pdf(request):
     """Gera o DOCX do contrato preenchendo o template"""
