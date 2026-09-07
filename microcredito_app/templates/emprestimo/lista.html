@@ -138,12 +138,7 @@
                             <a href="{% url 'emprestimo_parcelas' emp.id %}" class="btn btn-sm btn-outline-primary" title="Ver Parcelas">
                                 <i class="bi bi-list-ul"></i>
                             </a>
-                            
-                            <!-- ✅ IMPRIMIR CONTRATO -->
-                            <a href="{% url 'gerar_contrato_pdf' emp.id %}" class="btn btn-sm btn-outline-info" target="_blank" title="Imprimir Contrato">
-                                <i class="bi bi-printer"></i>
-                            </a>
-                            
+
                             <!-- Baixar Empréstimo -->
                             <button class="btn btn-sm btn-outline-success" onclick="baixarEmprestimo({{ emp.id }})" title="Baixar Empréstimo">
                                 <i class="bi bi-cash-stack"></i>
