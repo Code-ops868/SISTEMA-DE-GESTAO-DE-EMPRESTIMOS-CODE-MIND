@@ -116,36 +116,54 @@ def validar_dire(dire):
     
     return False, f'Letra inválida. Correta: {letra_calculada}'
 #==============================================================================================
-def validar_bi_passaporte(bi_passaporte):
+def clean_bi_passaporte(self):
     """
-    Valida BI Moçambicano: 13 dígitos + letra (Módulo 23)
+    Valida BI, DIRE ou Passaporte moçambicano pelo formato estrutural:
+    - BI: 12 dígitos + letra (ex: 110101234567A)
+    - DIRE: 8 dígitos + letra (ex: 00012345A)
+    - Passaporte: 2 letras + 7 dígitos (ex: AB1234567)
     """
-    if not bi_passaporte:
+    bi = self.cleaned_data.get('bi_passaporte')
+    if bi:
+        bi = bi.strip().upper()
+        
+        valido = (
+            re.match(r'^[0-9]{12}[A-Z]$', bi) or   # BI
+            re.match(r'^[0-9]{8}[A-Z]$', bi) or     # DIRE
+            re.match(r'^[A-Z]{2}[0-9]{7}$', bi)     # Passaporte
+        )
+        
+        if not valido:
+            raise ValidationError(
+                'Formato inválido. BI: 12 dígitos + letra (ex: 110101234567A) | '
+                'DIRE: 8 dígitos + letra (ex: 00012345A) | '
+                'Passaporte: 2 letras + 7 dígitos (ex: AB1234567)'
+            )
+        
+        # Verificar duplicidade
+        cliente_id = self.instance.id if self.instance else None
+        if Cliente.objects.filter(bi_passaporte=bi).exclude(id=cliente_id).exists():
+            raise ValidationError('BI/Passaporte/DIRE já cadastrado para outro cliente.')
+    return bi
+
+#=============================================================================================
+def validar_bi_passaporte(bi):
+    """Valida BI ou passaporte e devolve (válido, erro, tipo)."""
+    if not bi:
         return True, None, None
-    
-    bi = str(bi_passaporte).strip().upper()
-    
-    # BI: 13 dígitos + 1 letra
-    match = re.match(r'^([0-9]{13})([A-Z])$', bi)
-    if not match:
-        return False, 'Formato: 13 dígitos + letra (ex: 031123456789B)', None
-    
-    numeros = match.group(1)
-    letra_informada = match.group(2)
-    
-    # Módulo 23
-    letras = 'ABCDEFGHJKLMNPQRSTVWXYZ'
-    peso = 0
-    for i, digito in enumerate(numeros):
-        peso += int(digito) * (i + 1)
-    
-    resto = peso % 23
-    letra_calculada = letras[resto - 1] if resto > 0 else 'Z'
-    
-    if letra_informada == letra_calculada:
+
+    bi = str(bi).strip().upper()
+    if re.match(r'^[0-9]{12}[A-Z]$', bi):
         return True, None, 'BI'
-    
-    return False, f'Letra inválida. Correta: {letra_calculada}', None
+    if re.match(r'^[A-Z]{2}[0-9]{7}$', bi):
+        return True, None, 'Passaporte'
+
+    return (
+        False,
+        'Formato inválido. BI: 12 dígitos + letra | Passaporte: 2 letras + 7 dígitos.',
+        None,
+    )
+
 #=============================================================================================
 def validar_documentos_cliente(data):
     errors = {}
