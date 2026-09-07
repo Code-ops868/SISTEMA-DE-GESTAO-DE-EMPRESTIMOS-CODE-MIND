@@ -6,7 +6,6 @@
 {% block page_css %}
 <link rel="stylesheet" href="{% static 'datatables/css/dataTables.bootstrap5.min.css' %}">
 <link rel="stylesheet" href="{% static 'css/emprestimos.css' %}">
-<!-- Flatpickr para calendários estilizados -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <style>
     .flatpickr-calendar {
@@ -14,9 +13,17 @@
         border: 1px solid rgba(56, 139, 253, 0.3) !important;
         border-radius: 12px !important;
         box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6) !important;
+        width: 307px !important;
+        padding: 10px !important;
     }
     .flatpickr-calendar .flatpickr-day {
         color: #e6edf3 !important;
+        border-radius: 8px !important;
+        font-weight: 500 !important;
+        width: 36px !important;
+        height: 36px !important;
+        line-height: 36px !important;
+        margin: 2px !important;
     }
     .flatpickr-calendar .flatpickr-day.selected {
         background: #88ff66 !important;
@@ -81,12 +88,10 @@
                 </div>
                 <div class="filtro-group">
                     <label for="data_inicio">Data Início</label>
-                    <!-- ✅ CORRIGIDO: type="text" com Flatpickr -->
                     <input type="text" name="data_inicio" id="data_inicio" class="form-control" value="{{ request.GET.data_inicio }}" placeholder="Selecione a data">
                 </div>
                 <div class="filtro-group">
                     <label for="data_fim">Data Fim</label>
-                    <!-- ✅ CORRIGIDO: type="text" com Flatpickr -->
                     <input type="text" name="data_fim" id="data_fim" class="form-control" value="{{ request.GET.data_fim }}" placeholder="Selecione a data">
                 </div>
                 <div class="filtro-actions">
@@ -129,16 +134,23 @@
                         </td>
                         <td>{{ emp.data_contrato|date:"d/m/Y" }}</td>
                         <td class="actions text-center">
+                            <!-- Ver Parcelas -->
                             <a href="{% url 'emprestimo_parcelas' emp.id %}" class="btn btn-sm btn-outline-primary" title="Ver Parcelas">
                                 <i class="bi bi-list-ul"></i>
                             </a>
+                            
+                            <!-- ✅ IMPRIMIR CONTRATO -->
+                            <a href="{% url 'gerar_contrato_pdf' emp.id %}" class="btn btn-sm btn-outline-info" target="_blank" title="Imprimir Contrato">
+                                <i class="bi bi-printer"></i>
+                            </a>
+                            
+                            <!-- Baixar Empréstimo -->
                             <button class="btn btn-sm btn-outline-success" onclick="baixarEmprestimo({{ emp.id }})" title="Baixar Empréstimo">
                                 <i class="bi bi-cash-stack"></i>
                             </button>
                         </td>
                     </tr>
                     {% empty %}
-                    <!-- ✅ CORRIGIDO: Classe no TR -->
                     <tr class="empty-state-row">
                         <td colspan="9" class="text-center py-5">
                             <i class="bi bi-calculator fs-1 d-block mb-3" style="color: #88ff66;"></i>
@@ -159,14 +171,13 @@
 <script src="{% static 'datatables/js/jquery.dataTables.min.js' %}"></script>
 <script src="{% static 'datatables/js/dataTables.bootstrap5.min.js' %}"></script>
 
-<!-- Flatpickr -->
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // ============================================
-    // ✅ FLATPICKR PARA OS FILTROS DE DATA
+    // FLATPICKR PARA OS FILTROS DE DATA
     // ============================================
     
     flatpickr('#data_inicio', {
@@ -186,41 +197,51 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // ============================================
-    // ✅ DATATABLES - APENAS SE HOUVER DADOS
+    // DATATABLES
     // ============================================
     
-    const tabela = document.getElementById('emprestimos-table');
-    const tbody = tabela ? tabela.querySelector('tbody') : null;
-    const temDados = tbody && tbody.querySelector('tr:not(.empty-state-row)');
-
-    if (temDados && typeof jQuery !== 'undefined' && jQuery.fn.DataTable) {
-        $('#emprestimos-table').DataTable({
-            language: {
-                "sEmptyTable": "Nenhum empréstimo encontrado",
-                "sInfo": "Mostrando _START_ até _END_ de _TOTAL_ empréstimos",
-                "sInfoEmpty": "Mostrando 0 até 0 de 0 empréstimos",
-                "sInfoFiltered": "(filtrado de _MAX_ empréstimos no total)",
-                "sLengthMenu": "Mostrar _MENU_ empréstimos por página",
-                "sSearch": "Pesquisar:",
-                "oPaginate": {
-                    "sFirst": "Primeiro",
-                    "sLast": "Último",
-                    "sNext": "Seguinte",
-                    "sPrevious": "Anterior"
-                }
-            },
-            pageLength: 10,
-            responsive: true,
-            order: [[0, 'desc']],
-            columnDefs: [
-                { orderable: false, targets: 8 }
-            ]
-        });
+    if (typeof jQuery !== 'undefined' && jQuery.fn && jQuery.fn.DataTable) {
+        const tabela = document.getElementById('emprestimos-table');
+        const tbody = tabela ? tabela.querySelector('tbody') : null;
+        const temDados = tbody && tbody.querySelector('tr:not(.empty-state-row)');
+        
+        if (temDados) {
+            $('#emprestimos-table').DataTable({
+                language: {
+                    "sEmptyTable": "Nenhum empréstimo encontrado",
+                    "sInfo": "Mostrando _START_ até _END_ de _TOTAL_ empréstimos",
+                    "sInfoEmpty": "Mostrando 0 até 0 de 0 empréstimos",
+                    "sInfoFiltered": "(filtrado de _MAX_ empréstimos no total)",
+                    "sLengthMenu": "Mostrar _MENU_ empréstimos por página",
+                    "sLoadingRecords": "Carregando...",
+                    "sProcessing": "Processando...",
+                    "sSearch": "Pesquisar:",
+                    "sZeroRecords": "Nenhum empréstimo encontrado",
+                    "oPaginate": {
+                        "sFirst": "Primeiro",
+                        "sLast": "Último",
+                        "sNext": "Seguinte",
+                        "sPrevious": "Anterior"
+                    }
+                },
+                pageLength: 10,
+                responsive: true,
+                order: [[0, 'desc']],
+                columnDefs: [
+                    { orderable: false, targets: 8 }
+                ]
+            });
+            console.log('✅ DataTables inicializado com sucesso');
+        } else {
+            console.log('ℹ️ Tabela vazia, DataTables não inicializado');
+        }
+    } else {
+        console.error('❌ jQuery ou DataTables não carregado');
     }
 });
 
 function baixarEmprestimo(id) {
-    if (confirm('Deseja marcar este empréstimo como pago?')) {
+    if (confirm('Deseja marcar este empréstimo como pago? Todas as parcelas serão quitadas.')) {
         fetch(`/emprestimos/baixar/${id}/`, {
             method: 'POST',
             headers: {
@@ -235,6 +256,9 @@ function baixarEmprestimo(id) {
             } else {
                 alert(data.error || 'Erro ao baixar empréstimo');
             }
+        })
+        .catch(error => {
+            alert('Erro ao comunicar com o servidor');
         });
     }
 }
