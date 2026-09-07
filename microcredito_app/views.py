@@ -40,7 +40,7 @@ from .forms import CadastroForm, LoginForm, ClienteForm
 
 from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
-from .services.contrato_service import ContratoService
+
 
 logger = logging.getLogger('django')
 
