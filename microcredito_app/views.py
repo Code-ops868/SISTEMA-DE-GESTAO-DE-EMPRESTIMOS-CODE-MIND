@@ -2023,14 +2023,3 @@ def politica_privacidade(request):
 # microcredito_app/views.py
 
 #=======================================================================================
-@login_required
-def gerar_contrato_pdf(request, emprestimo_id):
-    """Gera o PDF do contrato para impressão"""
-    emprestimo = get_object_or_404(Emprestimo, id=emprestimo_id, usuario=request.user)
-    
-    service = ContratoService()
-    pdf_content = service.gerar_contrato(emprestimo)
-    
-    response = HttpResponse(pdf_content, content_type='application/pdf')
-    response['Content-Disposition'] = f'filename=contrato_emprestimo_{emprestimo.id}.pdf'
-    return response

@@ -130,5 +130,5 @@ urlpatterns = [
     # CONFIRMAÇÃO DE EMAIL
     # ============================================
     path('confirmar-email/<str:codigo>/', views.confirmar_email_view, name='confirmar_email'),
-    path('emprestimo/contrato/<int:emprestimo_id>/', views.gerar_contrato_pdf, name='gerar_contrato_pdf'),
+   
 ]
