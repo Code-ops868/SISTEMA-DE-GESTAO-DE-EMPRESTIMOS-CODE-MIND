@@ -38,6 +38,10 @@ from .models import (
 from .mpesa_service import NetShopService
 from .forms import CadastroForm, LoginForm, ClienteForm
 
+from django.http import HttpResponse
+from django.contrib.auth.decorators import login_required
+from .services.contrato_service import ContratoService
+
 logger = logging.getLogger('django')
 
 # Domínios de e-mail temporário/descartável bloqueados no cadastro
@@ -2016,3 +2020,17 @@ def termos_e_condicoes(request):
 def politica_privacidade(request):
     return render(request, 'legal/politica_privacidade.html')
 
+# microcredito_app/views.py
+
+#=======================================================================================
+@login_required
+def gerar_contrato_pdf(request, emprestimo_id):
+    """Gera o PDF do contrato para impressão"""
+    emprestimo = get_object_or_404(Emprestimo, id=emprestimo_id, usuario=request.user)
+    
+    service = ContratoService()
+    pdf_content = service.gerar_contrato(emprestimo)
+    
+    response = HttpResponse(pdf_content, content_type='application/pdf')
+    response['Content-Disposition'] = f'filename=contrato_emprestimo_{emprestimo.id}.pdf'
+    return response
