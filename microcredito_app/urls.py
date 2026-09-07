@@ -3,6 +3,7 @@ from django.urls import path
 from .views import inscrever_push, desinscrever_push, verificar_inscricao_push
 from django.views.generic import TemplateView
 from django.contrib.auth import views as auth_views
+from .views import pagina_contrato, gerar_contrato_pdf
 
 urlpatterns = [
     # ============================================
@@ -130,5 +131,9 @@ urlpatterns = [
     # CONFIRMAÇÃO DE EMAIL
     # ============================================
     path('confirmar-email/<str:codigo>/', views.confirmar_email_view, name='confirmar_email'),
+
+    #=========================Contrato Pdf ========================================
+    path('contrato/', pagina_contrato, name='pagina_contrato'),
+    path('contrato/pdf/', gerar_contrato_pdf, name='gerar_contrato_pdf'),
    
 ]

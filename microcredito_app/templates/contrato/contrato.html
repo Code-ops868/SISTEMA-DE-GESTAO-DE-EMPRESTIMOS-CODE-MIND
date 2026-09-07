@@ -1,0 +1,192 @@
+{% extends "core/dashboard_base.html" %}
+{% load static %}
+
+{% block title %}Imprimir Contrato - CODEMIND{% endblock %}
+
+{% block page_css %}
+<style>
+    .contrato-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 70vh;
+        padding: 2rem;
+    }
+
+    .contrato-card {
+        background: linear-gradient(135deg, rgba(13, 17, 23, 0.9), rgba(10, 12, 16, 0.95));
+        border: 1px solid rgba(56, 139, 253, 0.2);
+        border-radius: 20px;
+        padding: 3rem;
+        text-align: center;
+        max-width: 600px;
+        width: 100%;
+        backdrop-filter: blur(10px);
+    }
+
+    .contrato-card .icon {
+        font-size: 4rem;
+        color: #88ff66;
+        margin-bottom: 1rem;
+    }
+
+    .contrato-card h2 {
+        color: #e6edf3;
+        font-size: 1.75rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .contrato-card p {
+        color: rgba(230, 237, 243, 0.6);
+        font-size: 0.95rem;
+        margin-bottom: 2rem;
+    }
+
+    .btn-print {
+        background: linear-gradient(135deg, #88ff66, #5fd43e);
+        border: none;
+        padding: 0.75rem 2.5rem;
+        border-radius: 10px;
+        color: #0a0c10;
+        font-weight: 600;
+        font-size: 1.1rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.75rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+    }
+
+    .btn-print:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 25px rgba(136, 255, 102, 0.4);
+    }
+
+    .btn-print i {
+        font-size: 1.3rem;
+    }
+
+    .btn-secondary {
+        background: transparent;
+        border: 1px solid rgba(230, 237, 243, 0.3);
+        padding: 0.75rem 2.5rem;
+        border-radius: 10px;
+        color: rgba(230, 237, 243, 0.7);
+        font-weight: 500;
+        font-size: 1.1rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.75rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+    }
+
+    .btn-secondary:hover {
+        border-color: rgba(230, 237, 243, 0.6);
+        color: #e6edf3;
+        background: rgba(230, 237, 243, 0.05);
+        transform: translateY(-2px);
+    }
+
+    .contrato-info {
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid rgba(56, 139, 253, 0.15);
+        color: rgba(230, 237, 243, 0.4);
+        font-size: 0.85rem;
+    }
+
+    .contrato-info i {
+        color: #88ff66;
+        margin-right: 0.5rem;
+    }
+
+    .btn-group {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .info-emprestimo {
+        background: rgba(136, 255, 102, 0.05);
+        border: 1px solid rgba(136, 255, 102, 0.15);
+        border-radius: 10px;
+        padding: 1rem 1.5rem;
+        margin: 1rem 0;
+        text-align: left;
+    }
+
+    .info-emprestimo .row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.25rem 0;
+        color: #e6edf3;
+        font-size: 0.9rem;
+    }
+
+    .info-emprestimo .row span:last-child {
+        color: #88ff66;
+        font-weight: 600;
+    }
+</style>
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="contrato-container">
+    <div class="contrato-card">
+        <div class="icon">
+            <i class="bi bi-file-earmark-text"></i>
+        </div>
+        
+        <h2>Imprimir Contrato</h2>
+        <p>Gere o contrato de empréstimo em PDF para impressão.</p>
+
+        {% if emprestimos %}
+        <!-- Informações do empréstimo selecionado -->
+        {% for emp in emprestimos %}
+        <div class="info-emprestimo">
+            <div class="row">
+                <span>Cliente</span>
+                <span>{{ emp.cliente.nome }}</span>
+            </div>
+            <div class="row">
+                <span>Valor</span>
+                <span>MT {{ emp.valor|floatformat:2 }}</span>
+            </div>
+            <div class="row">
+                <span>Parcelas</span>
+                <span>{{ emp.quantidade_parcelas }}x</span>
+            </div>
+            <div class="row">
+                <span>Status</span>
+                <span>{{ emp.get_status_display }}</span>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <p class="text-muted" style="color: rgba(230, 237, 243, 0.5); margin: 1rem 0;">
+            <i class="bi bi-info-circle"></i> Selecione um empréstimo para gerar o contrato.
+        </p>
+        {% endif %}
+
+        <div class="btn-group">
+            <a href="{% url 'gerar_contrato_pdf' %}" class="btn-print" target="_blank">
+                <i class="bi bi-printer"></i> Imprimir Contrato
+            </a>
+            <a href="{% url 'dashboard' %}" class="btn-secondary">
+                <i class="bi bi-arrow-left"></i> Voltar
+            </a>
+        </div>
+
+        <div class="contrato-info">
+            <i class="bi bi-info-circle"></i>
+            O contrato será gerado com os dados do empréstimo e do cliente.
+        </div>
+    </div>
+</div>
+{% endblock %}
